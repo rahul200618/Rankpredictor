@@ -1,0 +1,41 @@
+# KCET Coded - robots.txt
+# https://kcet-coded2.vercel.app
+
+# Allow all search engine crawlers
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /data/
+User-agent: Googlebot
+Allow: /
+
+# Google Images
+User-agent: Googlebot-Image
+Allow: /
+
+# Bing
+User-agent: Bingbot
+Allow: /
+
+# Yahoo
+User-agent: Slurp
+Allow: /
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+
+# Baidu
+User-agent: Baiduspider
+Allow: /
+
+# Yandex
+User-agent: YandexBot
+Allow: /
+
+# Host
+Host: https://kcet-coded2.vercel.app
+
+# Sitemap
+Sitemap: https://kcet-coded2.vercel.app/sitemap.xml
