@@ -1,1 +1,5 @@
-google.com, pub-8278256783074970, DIRECT, f08c47fec0942fa0
+# This file is currently empty.
+# Once you sign up for Google AdSense and get approved, 
+# Google will give you a line of code to paste here.
+# It will look something like this:
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

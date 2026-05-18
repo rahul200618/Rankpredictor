@@ -15,13 +15,13 @@ const BASE_KEYWORDS = 'KCET, KCET 2026, KCET 2025, Karnataka CET, KEA, Karnataka
 export function SEO({
     title,
     description,
-    url = 'https://kcet-coded2.vercel.app',
+    url = typeof window !== 'undefined' ? window.location.href : 'https://predictrank.in',
     type = 'website',
-    image = 'https://kcet-coded2.vercel.app/icon-512x512.png',
+    image = typeof window !== 'undefined' ? `${window.location.origin}/icon-512x512.png` : 'https://predictrank.in/icon-512x512.png',
     keywords = '',
     jsonLd,
 }: SEOProps) {
-    const fullTitle = `${title} | KCET Coded`;
+    const fullTitle = `${title} | PredictRank`;
     const allKeywords = keywords ? `${keywords}, ${BASE_KEYWORDS}` : BASE_KEYWORDS;
 
     return (
@@ -31,7 +31,7 @@ export function SEO({
             <meta name="description" content={description} />
             <meta name="keywords" content={allKeywords} />
             <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-            <meta name="author" content="KCET Coded" />
+            <meta name="author" content="PredictRank" />
             {url && <link rel="canonical" href={url} />}
 
             {/* Open Graph / Facebook */}
@@ -40,7 +40,7 @@ export function SEO({
             <meta property="og:type" content={type} />
             <meta property="og:url" content={url} />
             <meta property="og:image" content={image} />
-            <meta property="og:site_name" content="KCET Coded" />
+            <meta property="og:site_name" content="PredictRank" />
             <meta property="og:locale" content="en_IN" />
 
             {/* Twitter */}

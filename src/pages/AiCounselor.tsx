@@ -1,4 +1,4 @@
-// AI Counselor page deprecated and removed from building.
+// AI Counselor page removed
 export default function AiCounselor() {
   return null;
 }

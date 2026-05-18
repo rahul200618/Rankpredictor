@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useExamMode } from "@/contexts/ExamModeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { predictRank } from "@/data/mockData";
+import { SEO } from "@/components/SEO";
 import {
   Download, AlertCircle, Zap, TrendingUp, Target,
   Atom, FlaskConical, Calculator, ToggleLeft, ToggleRight,
@@ -138,6 +141,7 @@ function EntryRow({ e, onDelete }: { e: SavedEntry; onDelete: (id: number) => vo
 
 export default function RankPredictor() {
   const { examMode } = useExamMode();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
   const [phyKcet, setPhyKcet] = useState(40);
@@ -185,53 +189,104 @@ export default function RankPredictor() {
   }, [phyKcet, chemKcet, mathKcet, phyBoard, chemBoard, mathBoard, simpleKcet, simplePuc]);
 
   const handleSave = async () => {
+    if (!user) {
+      alert("Please log in to save your marks to the cloud.");
+      return;
+    }
     setSaveState("saving");
     try {
-      const body = {
-        examMode,
-        entryMode: subjectMode ? "subject" : "simple",
-        phyKcet: subjectMode ? phyKcet : Math.round(simpleKcet / 3),
-        chemKcet: subjectMode ? chemKcet : Math.round(simpleKcet / 3),
-        mathKcet: subjectMode ? mathKcet : Math.round(simpleKcet / 3),
-        kcetTotal,
-        phyBoard: subjectMode ? phyBoard : Math.round(simplePuc),
-        chemBoard: subjectMode ? chemBoard : Math.round(simplePuc),
-        mathBoard: subjectMode ? mathBoard : Math.round(simplePuc),
-        boardAvg: pucPct,
-        keaScore,
-        predictedRankLow: rankLow,
-        predictedRankHigh: rankHigh,
+      const newEntry = {
+        user_id: user.id,
+        exam_mode: examMode,
+        entry_mode: subjectMode ? "subject" : "simple",
+        phy_kcet: subjectMode ? phyKcet : Math.round(simpleKcet / 3),
+        chem_kcet: subjectMode ? chemKcet : Math.round(simpleKcet / 3),
+        math_kcet: subjectMode ? mathKcet : Math.round(simpleKcet / 3),
+        kcet_total: kcetTotal,
+        phy_board: subjectMode ? phyBoard : Math.round(simplePuc),
+        chem_board: subjectMode ? chemBoard : Math.round(simplePuc),
+        math_board: subjectMode ? mathBoard : Math.round(simplePuc),
+        board_avg: pucPct,
+        kea_score: keaScore,
+        predicted_rank_low: rankLow,
+        predicted_rank_high: rankHigh,
       };
-      const res = await fetch("/api/marks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const saved: SavedEntry = await res.json();
-      setSavedEntries(prev => [saved, ...prev]);
+      
+      const { data, error } = await supabase.from('saved_marks').insert([newEntry]).select().single();
+      if (error) throw error;
+      
+      const mappedEntry: SavedEntry = {
+        id: data.id,
+        examMode: data.exam_mode,
+        entryMode: data.entry_mode,
+        phyKcet: data.phy_kcet,
+        chemKcet: data.chem_kcet,
+        mathKcet: data.math_kcet,
+        kcetTotal: data.kcet_total,
+        phyBoard: data.phy_board,
+        chemBoard: data.chem_board,
+        mathBoard: data.math_board,
+        boardAvg: data.board_avg,
+        keaScore: data.kea_score,
+        predictedRankLow: data.predicted_rank_low,
+        predictedRankHigh: data.predicted_rank_high,
+        createdAt: data.created_at,
+      };
+      
+      setSavedEntries(prev => [mappedEntry, ...prev]);
       setSaveState("saved");
       setShowHistory(true);
       setTimeout(() => setSaveState("idle"), 3000);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSaveState("error");
       setTimeout(() => setSaveState("idle"), 3000);
     }
   };
 
   const loadHistory = useCallback(async () => {
+    if (!user) return;
     setLoadingHistory(true);
     try {
-      const res = await fetch("/api/marks");
-      if (res.ok) setSavedEntries(await res.json());
+      const { data, error } = await supabase
+        .from('saved_marks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (!error && data) {
+        const mappedData: SavedEntry[] = data.map((d: any) => ({
+          id: d.id,
+          examMode: d.exam_mode,
+          entryMode: d.entry_mode,
+          phyKcet: d.phy_kcet,
+          chemKcet: d.chem_kcet,
+          mathKcet: d.math_kcet,
+          kcetTotal: d.kcet_total,
+          phyBoard: d.phy_board,
+          chemBoard: d.chem_board,
+          mathBoard: d.math_board,
+          boardAvg: d.board_avg,
+          keaScore: d.kea_score,
+          predictedRankLow: d.predicted_rank_low,
+          predictedRankHigh: d.predicted_rank_high,
+          createdAt: d.created_at,
+        }));
+        setSavedEntries(mappedData);
+      }
     } catch { /* ignore */ }
     finally { setLoadingHistory(false); }
-  }, []);
+  }, [user]);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
 
   const handleDelete = async (id: number) => {
-    setSavedEntries(prev => prev.filter(e => e.id !== id));
+    try {
+      const { error } = await supabase.from('saved_marks').delete().eq('id', id);
+      if (!error) {
+        setSavedEntries(prev => prev.filter(e => e.id !== id));
+      }
+    } catch { /* ignore */ }
   };
 
   const handleDownload = async () => {
@@ -251,6 +306,11 @@ export default function RankPredictor() {
 
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-5">
+      <SEO 
+        title={`${examMode} Rank Predictor & Marks vs Rank 2025/2026`}
+        description={`Predict your ${examMode} 2025 & 2026 expected ranks instantly. Highly calibrated ${examMode} Marks vs Rank calculator based on the official KEA scoring model.`}
+        keywords={`${examMode.toLowerCase()} rank predictor, ${examMode.toLowerCase()} marks vs rank, ${examMode.toLowerCase()} 2026 rank predictor, ${examMode.toLowerCase()} 2025 marks vs rank, comedk rank predictor, comedk marks vs rank, kea rank calculator`}
+      />
       <div className="animate-slide-up flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/30 shrink-0">
           <Target size={17} className="text-white" />

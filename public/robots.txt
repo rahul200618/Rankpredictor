@@ -1,5 +1,5 @@
-# KCET Coded - robots.txt
-# https://kcet-coded2.vercel.app
+# PredictRank - robots.txt
+# https://predictrank.in
 
 # Allow all search engine crawlers
 User-agent: *
@@ -35,7 +35,7 @@ User-agent: YandexBot
 Allow: /
 
 # Host
-Host: https://kcet-coded2.vercel.app
+Host: https://predictrank.in
 
 # Sitemap
-Sitemap: https://kcet-coded2.vercel.app/sitemap.xml
+Sitemap: https://predictrank.in/sitemap.xml
