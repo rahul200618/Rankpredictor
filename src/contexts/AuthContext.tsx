@@ -142,24 +142,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Real Firebase Setup
-    // Clear any stale verifier instance to prevent "reCAPTCHA client element has been removed" on page transitions
-    if ((window as any)._recaptchaVerifier) {
-      try {
-        (window as any)._recaptchaVerifier.clear();
-      } catch (e) {
-        console.warn("Failed to clear stale recaptcha: ", e);
+    const triggerSignIn = async (forceFresh = false) => {
+      let verifier = (window as any)._recaptchaVerifier;
+
+      if (forceFresh && verifier) {
+        try {
+          verifier.clear();
+        } catch (e) {}
+        verifier = null;
+        (window as any)._recaptchaVerifier = null;
       }
-      (window as any)._recaptchaVerifier = null;
+
+      if (verifier) {
+        const container = document.getElementById("recaptcha-container");
+        if (!container || !container.hasChildNodes()) {
+          try {
+            verifier.clear();
+          } catch (e) {}
+          verifier = null;
+          (window as any)._recaptchaVerifier = null;
+        }
+      }
+
+      if (!verifier) {
+        verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+          callback: () => {},
+        });
+        (window as any)._recaptchaVerifier = verifier;
+      }
+
+      return signInWithPhoneNumber(auth, phone, verifier);
+    };
+
+    try {
+      confirmationResultRef = await triggerSignIn(false);
+    } catch (err: any) {
+      console.warn("First sign-in attempt failed. Retrying with fresh recaptcha...", err);
+      // If we hit any recaptcha rendering or mounting issues, force clear the verifier cache and retry!
+      const isRecaptchaErr = 
+        err.message?.includes("rendered") || 
+        err.message?.includes("removed") || 
+        err.code?.includes("recaptcha") ||
+        err.message?.includes("already-exists");
+
+      if (isRecaptchaErr) {
+        confirmationResultRef = await triggerSignIn(true);
+      } else {
+        throw err;
+      }
     }
-
-    const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-      size: "invisible",
-      callback: () => {},
-    });
-    (window as any)._recaptchaVerifier = verifier;
-
-    confirmationResultRef = await signInWithPhoneNumber(auth, phone, verifier);
   };
 
   // ── Verify OTP ─────────────────────────────────────────────────────────────

@@ -121,20 +121,68 @@ export default function DeveloperPage() {
     setFeatures(prev => ({ ...prev, [key]: !prev[key] }));
   };
   
-  const handleAddAdmin = () => {
+  const persistAdmins = async (newAdminsList: string[]) => {
+    try {
+      const updates = [{
+        setting_key: "admin_phones",
+        setting_value: newAdminsList,
+        updated_at: new Date().toISOString()
+      }];
+
+      const rpcResult = await supabaseAny.rpc("secure_update_app_settings", {
+        p_updates: updates,
+        p_secret: "my_super_secret_developer_key_2026"
+      });
+      
+      if (rpcResult.error) {
+        const rpcMessage = rpcResult.error.message || "";
+        const shouldFallbackToTableWrite = /schema cache|could not find the function|app_settings/i.test(rpcMessage);
+
+        if (shouldFallbackToTableWrite) {
+          const fallbackResult = await supabaseAny
+            .from("app_settings")
+            .upsert(updates, { onConflict: "setting_key" });
+
+          if (fallbackResult.error) {
+            throw fallbackResult.error;
+          }
+        } else {
+          throw rpcResult.error;
+        }
+      }
+      
+      toast({
+        title: "✅ Access Updated",
+        description: "Admins list synced successfully with Supabase.",
+      });
+    } catch (err: any) {
+      console.error("Error saving admins list", err);
+      toast({
+        title: "❌ Update Failed",
+        description: err.message || "Could not write to Supabase setting.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddAdmin = async () => {
     if (!newAdmin || newAdmin.length < 10) {
       toast({ title: "Invalid", description: "Please enter a valid phone number with country code.", variant: "destructive" });
       return;
     }
-    const formatted = newAdmin.startsWith("+") ? newAdmin : `+91${newAdmin}`;
+    const formatted = newAdmin.trim().startsWith("+") ? newAdmin.trim() : `+91${newAdmin.trim()}`;
     if (!admins.includes(formatted)) {
-      setAdmins([...admins, formatted]);
+      const updated = [...admins, formatted];
+      setAdmins(updated);
+      await persistAdmins(updated);
     }
     setNewAdmin("");
   };
 
-  const handleRemoveAdmin = (phone: string) => {
-    setAdmins(admins.filter(a => a !== phone));
+  const handleRemoveAdmin = async (phone: string) => {
+    const updated = admins.filter(a => a !== phone);
+    setAdmins(updated);
+    await persistAdmins(updated);
   };
 
   const handleSave = async () => {
