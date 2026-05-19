@@ -10,6 +10,8 @@ import {
   Atom, FlaskConical, Calculator, ToggleLeft, ToggleRight,
   Save, Check, Clock, Trash2, ChevronDown, ChevronUp, Loader2
 } from "lucide-react";
+import { PhoneOtpGate } from "@/components/PhoneOtpGate";
+import { LeadService } from "@/lib/lead-service";
 
 interface SavedEntry {
   id: number;
@@ -143,6 +145,14 @@ export default function RankPredictor() {
   const { examMode } = useExamMode();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+
+  const [verified, setVerified] = useState(LeadService.isLoggedIn() || !!user);
+
+  useEffect(() => {
+    if (user) {
+      setVerified(true);
+    }
+  }, [user]);
 
   const [phyKcet, setPhyKcet] = useState(40);
   const [chemKcet, setChemKcet] = useState(40);
@@ -304,6 +314,28 @@ export default function RankPredictor() {
     finally { setDownloading(false); }
   };
 
+  if (!verified) {
+    return (
+      <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+        <SEO 
+          title={`${examMode} Rank Predictor & Marks vs Rank 2025/2026`}
+          description={`Predict your ${examMode} 2025 & 2026 expected ranks instantly. Highly calibrated ${examMode} Marks vs Rank calculator based on the official KEA scoring model.`}
+          keywords={`${examMode.toLowerCase()} rank predictor, ${examMode.toLowerCase()} marks vs rank, ${examMode.toLowerCase()} 2026 rank predictor, ${examMode.toLowerCase()} 2025 marks vs rank, comedk rank predictor, comedk marks vs rank, kea rank calculator`}
+        />
+        <div className="animate-slide-up flex items-center gap-3 mb-8">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/30 shrink-0">
+            <Target size={17} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold text-foreground">Rank Predictor</h1>
+            <p className="text-xs text-muted-foreground">{examMode} 2026 — Live KEA Score Calculator & Analytics</p>
+          </div>
+        </div>
+        <PhoneOtpGate onVerified={() => { setVerified(true); loadHistory(); }} />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       <SEO 
@@ -430,8 +462,6 @@ export default function RankPredictor() {
 
           {/* Action Buttons */}
           <div className="flex gap-2.5 flex-col sm:flex-row lg:flex-col">
-
-
             <button onClick={() => setLocation(`/college-finder?rank=${rank}&category=GM&branch=CS`)}
               className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-primary to-violet-600 text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/30">
               <Target size={14} />
