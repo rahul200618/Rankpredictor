@@ -1,6 +1,7 @@
 ![React](https://img.shields.io/badge/React-18-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue)
 ![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)
+![Hostinger](https://img.shields.io/badge/Hosted%20on-Hostinger-purple)
 
 # RankPrediction 🎓
 
@@ -47,6 +48,8 @@ RankPrediction is a student-focused counseling intelligence platform for KCET an
 - Supabase
 - Firebase Authentication
 - Vercel Serverless Functions
+- Node.js API
+- Hostinger Hosting 
 
 ### Libraries
 - XLSX
@@ -208,17 +211,10 @@ Permission is granted only for viewing and contributing to this project through 
 
 Unauthorized copying, redistribution, commercial use, or creation of derivative works outside this repository is prohibited.
 
+## 📜 License
+
+This project is proprietary software.
 
 Copyright © 2026 RankPrediction
 
-All Rights Reserved.
-
-This software and associated files are proprietary.
-
-This repository is made publicly accessible solely for viewing and contribution purposes.
-
-Viewing or contributing to this repository does not grant permission to copy, redistribute, sublicense, commercially use, or create derivative works from this software outside the RankPrediction project.
-
-Contributors agree that submitted contributions become part of RankPrediction and remain subject to this license.
-
-All rights not expressly granted are reserved.
+See the `LICENSE` file for details.
