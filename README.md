@@ -6,11 +6,8 @@ RankPrediction (rankprediction.com) is a student-focused counseling intelligence
 
 - KCET and COMEDK mode-aware rank prediction
 - College discovery and cutoff exploration
-- College detail pages with historical context
 - Counseling enquiry capture and admin review
 - Reviews, feedback, and moderation surfaces
-- PYQ practice, daily challenge, and counseling utilities
-- News feed and automation support
 - XLSX-backed cutoff loading for college discovery
 
 ## Tech Stack
@@ -43,11 +40,8 @@ RankPrediction (rankprediction.com) is a student-focused counseling intelligence
 - Rank Predictor
 - Cutoff Explorer
 - College Finder
-- College Detail
-- College Compare surface
 - Round Tracker
-- Documents and planning support
-- Mock Simulator
+- Councelling guide
 
 ### Community and support
 
@@ -57,21 +51,11 @@ RankPrediction (rankprediction.com) is a student-focused counseling intelligence
 - Admin moderation and review views
 - AI Counselor
 
-### Learning and engagement
-
-- Daily Challenge
-- PYQ Test
-- Cutoff Clash
-- Info Centre
-- Materials
-- News feed
-
 ## Key Data Sources
 
 - KCET cutoff datasets in `public/data/`
 - COMEDK cutoff datasets in `public/data/`
 - College list in `public/colleges-list.json`
-- PYQ bank in `src/data/pyqQuestionBank.ts`
 - Supabase tables for app settings, counseling enquiries, and user profiles
 
 ## Setup
@@ -105,10 +89,6 @@ npm run test
 - `npm run extract:cutoffs`
 - `npm run extract:comedk`
 - `npm run move:xlsx`
-- `npm run fetch:news`
-- `npm run fetch:news:advanced`
-- `npm run refresh:news`
-- `npm run news:webhook`
 - `npm run build:summary`
 
 ## Environment Notes
@@ -119,11 +99,9 @@ The app expects Supabase and Firebase configuration through environment variable
 
 - Phone-based auth is used for signed-in features
 - Admin and developer routes are protected in the app shell
-- Counseling enquiries are stored in Supabase
+- Counseling enquiries are stored in Supabase and reCAPTCHA encryption with phone number verification 
 - Sensitive serverless endpoints use validation and logging helpers
 
 ## Notes
 
-This project is independent and not affiliated with KEA or COMEDK. Always verify final admission decisions against official documents.
-
-For implementation details, browse the code in `src/`, `api/`, and `supabase/`.
+This project is independent and not affiliated with KEA or COMEDK. Always verify final admission decisions against official documents..
