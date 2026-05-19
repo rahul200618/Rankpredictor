@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx'
+import type * as XLSXType from 'xlsx'
 
 export interface XLSXData {
   cutoffs: any[]
@@ -22,9 +22,10 @@ export class XLSXLoader {
     
     const arrayBuffer = await response.arrayBuffer()
     const data = new Uint8Array(arrayBuffer)
+    const XLSX = await import('xlsx')
     const workbook = XLSX.read(data, { type: 'array' })
     
-    return this.parseWorkbook(workbook, filePath)
+    return await this.parseWorkbook(workbook, filePath)
   }
 
   /**
@@ -75,8 +76,9 @@ export class XLSXLoader {
   /**
    * Parse workbook and extract cutoff data
    */
-  private static parseWorkbook(workbook: XLSX.WorkBook, source: string): XLSXData {
+  private static async parseWorkbook(workbook: any, source: string): Promise<XLSXData> {
     const cutoffs: any[] = []
+    const XLSX = await import('xlsx')
 
     // Process each sheet
     for (const sheetName of workbook.SheetNames) {

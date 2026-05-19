@@ -1,6 +1,6 @@
 {
-  "name": "RankPredictor - KCET Helping Hub",
-  "short_name": "RankPredictor",
+  "name": "RankPrediction - Free KCET & COMEDK Rank Predictor",
+  "short_name": "RankPrediction",
   "description": "Your comprehensive guide to KCET admissions with cutoff data, rank prediction, and college finder",
   "start_url": "/",
   "display": "standalone",

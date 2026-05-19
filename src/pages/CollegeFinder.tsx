@@ -20,8 +20,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { normalizeCourse, getUniqueCourses, isSameCourse } from "@/lib/course-normalizer"
 import { getPdfUrlWithPage } from "@/lib/pdf-url-mapper"
 import { extractPdfPage, getTrustMeta } from "@/lib/data-trust"
-import { jsPDF } from "jspdf"
-import autoTable from "jspdf-autotable"
 
 interface CutoffData {
   institute: string
@@ -828,16 +826,9 @@ const CollegeFinder = () => {
       try {
         setProgress(10)
 
-        // Load from the highest-volume merged source first
+        // Load from the consolidated master dataset directly
         const urls = [
-          '/data/kcet_cutoffs_high_volume.json',
-          '/data/kcet_cutoffs_master.json',
-          '/data/kcet_cutoffs_consolidated.json',
-          '/kcet_cutoffs_high_volume.json',
-          '/kcet_cutoffs_master.json',
-          '/kcet_cutoffs.json',
-          '/kcet_cutoffs_round3_2025.json',
-          '/kcet_cutoffs2025.json'
+          '/data/kcet_cutoffs_consolidated.json'
         ]
         let response: Response | null = null
         let dataSource = ''

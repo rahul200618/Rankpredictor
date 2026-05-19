@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
@@ -8,14 +8,26 @@ import { ExamModeProvider } from "@/contexts/ExamModeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Home from "@/pages/Home";
-import RankPredictor from "@/pages/RankPredictor";
-import CollegeFinder from "@/pages/CollegeFinder";
-import CollegeDetail from "@/pages/CollegeDetail";
-import AuthPage from "@/pages/AuthPage";
-import AdminPage from "@/pages/AdminPage";
-import DeveloperPage from "@/pages/DeveloperPage";
-import NotFound from "@/pages/not-found";
+
+// Premium Lazy-loaded Pages
+const Home = lazy(() => import("@/pages/Home"));
+const RankPredictor = lazy(() => import("@/pages/RankPredictor"));
+const CollegeFinder = lazy(() => import("@/pages/CollegeFinder"));
+const CollegeDetail = lazy(() => import("@/pages/CollegeDetail"));
+const AuthPage = lazy(() => import("@/pages/AuthPage"));
+const AdminPage = lazy(() => import("@/pages/AdminPage"));
+const DeveloperPage = lazy(() => import("@/pages/DeveloperPage"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+// Custom animated premium loader for chunk transitions
+const PageLoader = () => (
+  <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+    <div className="relative w-12 h-12">
+      <div className="w-12 h-12 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 animate-spin" />
+    </div>
+    <p className="text-sm font-semibold text-muted-foreground animate-pulse">Loading secure module...</p>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -74,12 +86,18 @@ function AppShell() {
   const toggleTheme = () => setTheme(t => t === "light" ? "dark" : "light");
 
   if (isAuthPage) {
-    return <AppRoutes />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AppRoutes />
+      </Suspense>
+    );
   }
 
   return (
     <Layout theme={theme} toggleTheme={toggleTheme}>
-      <AppRoutes />
+      <Suspense fallback={<PageLoader />}>
+        <AppRoutes />
+      </Suspense>
     </Layout>
   );
 }

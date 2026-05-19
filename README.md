@@ -1,6 +1,6 @@
-# Rankprediction
+# RankPrediction
 
-KCETCoded is a student-focused counseling intelligence platform for KCET and COMEDK aspirants. It turns cutoff data, rank prediction, college discovery, and counseling guidance into one fast web app.
+RankPrediction (rankprediction.com) is a student-focused counseling intelligence platform for KCET and COMEDK aspirants. It turns cutoff data, rank prediction, college discovery, and counseling guidance into one fast web app.
 
 ## What it does
 

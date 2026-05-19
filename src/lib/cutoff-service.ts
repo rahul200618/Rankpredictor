@@ -34,12 +34,9 @@ export class CutoffService {
     }
 
     try {
-      // Try multiple sources, including new R3 2025 file
+      // Fetch from the consolidated master dataset directly
       const sources = [
-        '/data/kcet_cutoffs_consolidated.json',
-        '/kcet_cutoffs.json',
-        '/kcet_cutoffs_round3_2025.json',
-        '/kcet_cutoffs2025.json'
+        '/data/kcet_cutoffs_consolidated.json'
       ];
       let response: Response | null = null;
       for (const url of sources) {

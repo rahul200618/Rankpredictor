@@ -4,8 +4,8 @@ export const config = {
 
 export default async function handler(req: Request) {
     const url = new URL(req.url);
-    const title = url.searchParams.get('title') || 'KCET Coded';
-    const subtitle = url.searchParams.get('subtitle') || 'Check out my result on KCET Coded!';
+    const title = url.searchParams.get('title') || 'RankPrediction';
+    const subtitle = url.searchParams.get('subtitle') || 'Check out my result on RankPrediction!';
     const redirectPath = url.searchParams.get('path') || '/';
 
     const baseUrl = url.origin;
@@ -18,7 +18,7 @@ export default async function handler(req: Request) {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${title} | KCET Coded</title>
+      <title>${title} | RankPrediction</title>
       <meta property="og:title" content="${title}" />
       <meta property="og:description" content="${subtitle}" />
       <meta property="og:image" content="${ogImageUrl}" />

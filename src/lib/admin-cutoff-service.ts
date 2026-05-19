@@ -85,12 +85,9 @@ export class AdminCutoffService {
     static async init(): Promise<void> {
         if (this.isLoaded) return;
 
-        // Load base data from the same sources CutoffExplorer uses
+        // Load base data directly from the consolidated dataset
         const urls = [
-            '/data/kcet_cutoffs_high_volume.json',
-            '/data/kcet_cutoffs_master.json',
             '/data/kcet_cutoffs_consolidated.json',
-            '/kcet_cutoffs.json',
         ];
 
         for (const url of urls) {
