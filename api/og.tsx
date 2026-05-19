@@ -11,7 +11,7 @@ export default async function handler(req: Request) {
         const hasTitle = searchParams.has('title');
         const title = hasTitle
             ? searchParams.get('title')?.slice(0, 100)
-            : 'PredictRank - The Ultimate KCET Guide';
+            : 'RankPrediction - The Ultimate KCET Guide';
 
         const hasSubtitle = searchParams.has('subtitle');
         const subtitle = hasSubtitle
@@ -43,7 +43,7 @@ export default async function handler(req: Request) {
                             justifyItems: 'center',
                         }}
                     >
-                        <h1 style={{ fontSize: 40, fontWeight: 900, marginBottom: 10, color: '#3b82f6' }}>PredictRank</h1>
+                        <h1 style={{ fontSize: 40, fontWeight: 900, marginBottom: 10, color: '#3b82f6' }}>RankPrediction</h1>
                     </div>
                     <div
                         style={{
@@ -83,7 +83,7 @@ export default async function handler(req: Request) {
                             opacity: 0.8,
                         }}
                     >
-                        predictrank.in
+                        rankprediction.com
                     </div>
                 </div>
             ),

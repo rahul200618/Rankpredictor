@@ -296,7 +296,7 @@ export default function RankPredictor() {
       if (cardRef.current) {
         const canvas = await html2canvas(cardRef.current, { scale: 2, backgroundColor: null });
         const link = document.createElement("a");
-        link.download = `predictrank-rank-card-${Date.now()}.png`;
+        link.download = `rankprediction-rank-card-${Date.now()}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
       }
@@ -305,230 +305,152 @@ export default function RankPredictor() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-5">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       <SEO 
         title={`${examMode} Rank Predictor & Marks vs Rank 2025/2026`}
         description={`Predict your ${examMode} 2025 & 2026 expected ranks instantly. Highly calibrated ${examMode} Marks vs Rank calculator based on the official KEA scoring model.`}
         keywords={`${examMode.toLowerCase()} rank predictor, ${examMode.toLowerCase()} marks vs rank, ${examMode.toLowerCase()} 2026 rank predictor, ${examMode.toLowerCase()} 2025 marks vs rank, comedk rank predictor, comedk marks vs rank, kea rank calculator`}
       />
+
+      {/* Header Title */}
       <div className="animate-slide-up flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/30 shrink-0">
           <Target size={17} className="text-white" />
         </div>
         <div>
           <h1 className="text-2xl font-extrabold text-foreground">Rank Predictor</h1>
-          <p className="text-xs text-muted-foreground">{examMode} 2025 — Live KEA Score Calculator</p>
+          <p className="text-xs text-muted-foreground">{examMode} 2026 — Live KEA Score Calculator & Analytics</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-primary/5 to-violet-500/5 border border-primary/15 rounded-2xl animate-scale-in">
-        <div>
-          <div className="text-sm font-bold text-foreground">{subjectMode ? "Subject-wise Entry" : "Simple Entry"}</div>
-          <div className="text-xs text-muted-foreground">{subjectMode ? "Enter marks for each subject separately" : "Enter totals directly with sliders"}</div>
-        </div>
-        <button onClick={() => setSubjectMode(v => !v)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-primary/30 bg-background hover:bg-primary/5 transition-all text-sm font-bold text-primary">
-          {subjectMode ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
-          {subjectMode ? "Switch to Simple" : "Enter by Subject"}
-        </button>
-      </div>
-
-      {subjectMode && (
-        <div className="space-y-4 animate-scale-in">
-          <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-sm font-extrabold text-foreground">{examMode} Marks</div>
-                <div className="text-xs text-muted-foreground">Max 60 per subject</div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-black gradient-text tabular-nums">{phyKcet + chemKcet + mathKcet}</div>
-                <div className="text-xs text-muted-foreground">/ 180 total</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <NumInput label="Physics" value={phyKcet} max={60} onChange={setPhyKcet} icon={Atom} color="#60a5fa" sublabel="Phy" />
-              <NumInput label="Chemistry" value={chemKcet} max={60} onChange={setChemKcet} icon={FlaskConical} color="#34d399" sublabel="Chem" />
-              <NumInput label="Maths" value={mathKcet} max={60} onChange={setMathKcet} icon={Calculator} color="#a78bfa" sublabel="Math" />
-            </div>
-            <div className="mt-4 h-3 rounded-full overflow-hidden flex gap-0.5">
-              <div className="h-full rounded-l-full transition-all duration-300" style={{ width: `${(phyKcet / 180) * 100}%`, background: "#60a5fa" }} />
-              <div className="h-full transition-all duration-300" style={{ width: `${(chemKcet / 180) * 100}%`, background: "#34d399" }} />
-              <div className="h-full transition-all duration-300" style={{ width: `${(mathKcet / 180) * 100}%`, background: "#a78bfa" }} />
-              <div className="flex-1 h-full bg-muted rounded-r-full" />
-            </div>
-            <div className="flex gap-4 mt-1.5">
-              {[["Physics", "#60a5fa", phyKcet], ["Chemistry", "#34d399", chemKcet], ["Maths", "#a78bfa", mathKcet]].map(([l, c, v]) => (
-                <div key={l as string} className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full" style={{ background: c as string }} />
-                  <span className="text-[10px] text-muted-foreground">{l}: <strong style={{ color: c as string }}>{v}</strong></span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-sm font-extrabold text-foreground">Board (PUC / 12th) Marks</div>
-                <div className="text-xs text-muted-foreground">Enter marks out of 100 per subject</div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-black gradient-text tabular-nums">{((phyBoard + chemBoard + mathBoard) / 3).toFixed(1)}%</div>
-                <div className="text-xs text-muted-foreground">PCM average</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <NumInput label="Physics" value={phyBoard} max={100} onChange={setPhyBoard} icon={Atom} color="#f472b6" sublabel="Phy" />
-              <NumInput label="Chemistry" value={chemBoard} max={100} onChange={setChemBoard} icon={FlaskConical} color="#fb923c" sublabel="Chem" />
-              <NumInput label="Maths" value={mathBoard} max={100} onChange={setMathBoard} icon={Calculator} color="#facc15" sublabel="Math" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!subjectMode && (
-        <div className="bg-card border border-card-border rounded-2xl p-5 space-y-6 animate-scale-in shadow-sm">
-          {[
-            { label: `${examMode} Total Marks`, value: simpleKcet, min: 0, max: 180, onChange: setSimpleKcet, unit: "", grad: "from-blue-500 to-indigo-500" },
-            { label: "Board PCM Percentage", value: simplePuc, min: 35, max: 100, onChange: setSimplePuc, unit: "%", grad: "from-violet-500 to-purple-500" },
-          ].map(({ label, value, min, max, onChange, unit, grad }) => {
-            const pct = ((value - min) / (max - min)) * 100;
-            return (
-              <div key={label}>
-                <div className="flex justify-between mb-3">
-                  <span className="text-sm font-bold text-foreground">{label}</span>
-                  <span className="text-lg font-extrabold gradient-text tabular-nums">{value}{unit}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => onChange(Math.max(min, value - 1))} className="w-8 h-8 rounded-xl border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all text-lg leading-none">−</button>
-                  <div className="relative flex-1 h-3 bg-muted rounded-full">
-                    <div className={`absolute left-0 top-0 h-full rounded-full bg-gradient-to-r ${grad} transition-all`} style={{ width: `${pct}%` }} />
-                    <input type="range" min={min} max={max} value={value} onChange={e => onChange(Number(e.target.value))} className="absolute inset-0 w-full opacity-0 cursor-pointer h-full" />
-                    <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-primary rounded-full shadow-lg shadow-primary/30 pointer-events-none" style={{ left: `calc(${pct}% - 10px)` }} />
+      {/* Main Grid Container: Left (Inputs) vs Right (Sticky Results Card) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* ── LEFT SIDE (Input Marks) ── */}
+        <div className="lg:col-span-7 space-y-5 animate-slide-up">
+          
+          {/* Subject-Wise Marks Cards */}
+          <div className="space-y-4">
+              {/* KCET Marks */}
+              <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="text-sm font-extrabold text-foreground">{examMode} Marks</div>
+                    <div className="text-xs text-muted-foreground">Max 60 per subject</div>
                   </div>
-                  <button onClick={() => onChange(Math.min(max, value + 1))} className="w-8 h-8 rounded-xl border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all text-lg leading-none">+</button>
+                  <div className="text-right">
+                    <div className="text-2xl font-black gradient-text tabular-nums">{phyKcet + chemKcet + mathKcet}</div>
+                    <div className="text-xs text-muted-foreground">/ 180 total</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumInput label="Physics" value={phyKcet} max={60} onChange={setPhyKcet} icon={Atom} color="#60a5fa" sublabel="Phy" />
+                  <NumInput label="Chemistry" value={chemKcet} max={60} onChange={setChemKcet} icon={FlaskConical} color="#34d399" sublabel="Chem" />
+                  <NumInput label="Maths" value={mathKcet} max={60} onChange={setMathKcet} icon={Calculator} color="#a78bfa" sublabel="Math" />
+                </div>
+                <div className="mt-4 h-3 rounded-full overflow-hidden flex gap-0.5">
+                  <div className="h-full rounded-l-full transition-all duration-300" style={{ width: `${(phyKcet / 180) * 100}%`, background: "#60a5fa" }} />
+                  <div className="h-full transition-all duration-300" style={{ width: `${(chemKcet / 180) * 100}%`, background: "#34d399" }} />
+                  <div className="h-full transition-all duration-300" style={{ width: `${(mathKcet / 180) * 100}%`, background: "#a78bfa" }} />
+                  <div className="flex-1 h-full bg-muted rounded-r-full" />
+                </div>
+                <div className="flex gap-4 mt-1.5">
+                  {[["Physics", "#60a5fa", phyKcet], ["Chemistry", "#34d399", chemKcet], ["Maths", "#a78bfa", mathKcet]].map(([l, c, v]) => (
+                    <div key={l as string} className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full" style={{ background: c as string }} />
+                      <span className="text-[10px] text-muted-foreground">{l}: <strong style={{ color: c as string }}>{v}</strong></span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
 
-      <div className="flex items-start gap-3 p-3.5 bg-gradient-to-r from-primary/5 to-violet-500/5 rounded-xl border border-primary/15">
-        <Zap size={13} className="text-primary shrink-0 mt-0.5" />
-        <div>
-          <div className="text-xs font-semibold text-foreground mb-0.5">KEA Score Formula</div>
-          <code className="text-xs text-muted-foreground font-mono">KEA = (Total ÷ 1.8) × 0.5 + (PCM avg%) × 0.5</code>
-          {subjectMode && (
-            <div className="text-xs text-muted-foreground mt-1">
-              KCET <strong className="text-foreground">{kcetTotal}/180</strong> · Board avg <strong className="text-foreground">{pucPct.toFixed(1)}%</strong>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div ref={cardRef} className="relative overflow-hidden bg-card border-2 border-primary/25 rounded-2xl p-6 space-y-5 shadow-lg shadow-primary/10">
-        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-primary/8 blur-2xl pointer-events-none" />
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">PredictRank</div>
-            <div className="text-xs text-muted-foreground">{examMode} Rank Prediction</div>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full" style={{ background: confidenceConfig.dot }} />
-              <span className={`text-xs font-bold ${confidenceConfig.color}`}>{confidence}</span>
-            </div>
-          </div>
-          <RankGauge score={keaScore} />
-        </div>
-        <div className={`text-center py-5 rounded-xl bg-gradient-to-b from-primary/8 to-violet-500/5 border border-primary/15 transition-all duration-500 ${revealed ? "opacity-100" : "opacity-0"}`}>
-          <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center justify-center gap-1.5">
-            <TrendingUp size={11} /> Predicted Rank Range
-          </div>
-          <div className="text-4xl md:text-5xl font-black tabular-nums gradient-text">
-            {rankLow.toLocaleString("en-IN")} – {rankHigh.toLocaleString("en-IN")}
-          </div>
-          <div className="text-xs text-muted-foreground mt-2">Based on 2023–2025 {examMode} data</div>
-        </div>
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Prediction confidence</span>
-            <span className={`font-bold ${confidenceConfig.color}`}>{confidence}</span>
-          </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div className={`h-full rounded-full ${confidenceConfig.bar} transition-all duration-700`} style={{ width: confidenceConfig.width }} />
-          </div>
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground border-t border-border pt-3">
-          <span>{examMode}: <strong className="text-foreground">{kcetTotal}/180</strong></span>
-          <span>Board: <strong className="text-foreground">{pucPct.toFixed(1)}%</strong></span>
-          <span>KEA: <strong className="text-foreground">{keaScore.toFixed(2)}</strong></span>
-        </div>
-      </div>
-
-      <div className="flex gap-3 flex-wrap animate-slide-up">
-        <button onClick={handleSave} disabled={saveState === "saving" || saveState === "saved"}
-          className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all hover:scale-105 shadow-lg disabled:scale-100 ${
-            saveState === "saved"
-              ? "bg-emerald-500 text-white shadow-emerald-500/30"
-              : saveState === "error"
-              ? "bg-red-500 text-white shadow-red-500/30"
-              : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/30 hover:opacity-90"
-          } disabled:opacity-70`}>
-          {saveState === "saving" ? <Loader2 size={14} className="animate-spin" /> :
-           saveState === "saved" ? <Check size={14} /> :
-           <Save size={14} />}
-          {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved!" : saveState === "error" ? "Error — retry?" : "Save Marks"}
-        </button>
-
-        <button onClick={handleDownload} disabled={downloading}
-          className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl text-sm font-bold hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-blue-500/30 disabled:opacity-60 disabled:scale-100">
-          <Download size={14} />
-          {downloading ? "Generating…" : "Download Card"}
-        </button>
-
-        <button onClick={() => setLocation(`/college-finder?rank=${rank}&category=GM&branch=CS`)}
-          className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-primary to-violet-600 text-white rounded-xl text-sm font-bold hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-primary/30">
-          <Target size={14} />
-          Predict Eligible Colleges 🎯
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border overflow-hidden">
-        <button onClick={() => setShowHistory(v => !v)}
-          className="w-full flex items-center justify-between px-5 py-3.5 bg-muted/40 hover:bg-muted/60 transition-colors">
-          <div className="flex items-center gap-2.5">
-            <Clock size={14} className="text-primary" />
-            <span className="text-sm font-bold text-foreground">Saved Entries</span>
-            {savedEntries.length > 0 && (
-              <span className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded-full font-black">{savedEntries.length}</span>
-            )}
-          </div>
-          {showHistory ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-        </button>
-
-        {showHistory && (
-          <div className="p-4 space-y-2.5">
-            {loadingHistory ? (
-              <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground text-sm">
-                <Loader2 size={16} className="animate-spin" /> Loading history…
+              {/* Board Marks */}
+              <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="text-sm font-extrabold text-foreground">Board (PUC / 12th) Marks</div>
+                    <div className="text-xs text-muted-foreground">Enter marks out of 100 per subject</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-black gradient-text tabular-nums">{((phyBoard + chemBoard + mathBoard) / 3).toFixed(1)}%</div>
+                    <div className="text-xs text-muted-foreground">PCM average</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumInput label="Physics" value={phyBoard} max={100} onChange={setPhyBoard} icon={Atom} color="#f472b6" sublabel="Phy" />
+                  <NumInput label="Chemistry" value={chemBoard} max={100} onChange={setChemBoard} icon={FlaskConical} color="#fb923c" sublabel="Chem" />
+                  <NumInput label="Maths" value={mathBoard} max={100} onChange={setMathBoard} icon={Calculator} color="#facc15" sublabel="Math" />
+                </div>
               </div>
-            ) : savedEntries.length === 0 ? (
-              <div className="text-center py-8">
-                <Save size={28} className="text-muted-foreground mx-auto mb-2 opacity-40" />
-                <p className="text-sm text-muted-foreground">No saved entries yet.</p>
-                <p className="text-xs text-muted-foreground mt-1">Enter your marks and hit <strong>Save Marks</strong> above.</p>
-              </div>
-            ) : (
-              savedEntries.map(e => <EntryRow key={e.id} e={e} onDelete={handleDelete} />)
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          {/* Subject Mode only */}
 
-      <div className="flex gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800/50">
-        <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 dark:text-amber-300">Rank prediction is an estimate based on historical {examMode} trends. Always verify with the official KEA portal.</p>
+          {/* KEA Score Formula */}
+          <div className="flex items-start gap-3 p-3.5 bg-gradient-to-r from-primary/5 to-violet-500/5 rounded-xl border border-primary/15">
+            <Zap size={13} className="text-primary shrink-0 mt-0.5" />
+            <div>
+              <div className="text-xs font-semibold text-foreground mb-0.5">KEA Score Formula</div>
+              <code className="text-xs text-muted-foreground font-mono">KEA = (Total ÷ 1.8) × 0.5 + (PCM avg%) × 0.5</code>
+              {subjectMode && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  KCET <strong className="text-foreground">{kcetTotal}/180</strong> · Board avg <strong className="text-foreground">{pucPct.toFixed(1)}%</strong>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── RIGHT SIDE (Predicted Rank - Sticky Sidebar) ── */}
+        <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-5 animate-slide-up delay-100">
+          
+          {/* Prediction Result Card */}
+          <div ref={cardRef} className="relative overflow-hidden bg-card border-2 border-primary/25 rounded-2xl p-6 space-y-5 shadow-lg shadow-primary/10">
+            <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-primary/8 blur-2xl pointer-events-none" />
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">RankPrediction</div>
+                <div className="text-xs text-muted-foreground">{examMode} Rank Prediction</div>
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: confidenceConfig.dot }} />
+                  <span className={`text-xs font-bold ${confidenceConfig.color}`}>{confidence}</span>
+                </div>
+              </div>
+              <RankGauge score={keaScore} />
+            </div>
+            <div className={`text-center py-5 rounded-xl bg-gradient-to-b from-primary/8 to-violet-500/5 border border-primary/15 transition-all duration-500 ${revealed ? "opacity-100" : "opacity-0"}`}>
+              <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center justify-center gap-1.5">
+                <TrendingUp size={11} /> Predicted Rank Range
+              </div>
+              <div className="text-4xl md:text-5xl font-black tabular-nums gradient-text">
+                {rankLow.toLocaleString("en-IN")} – {rankHigh.toLocaleString("en-IN")}
+              </div>
+              <div className="text-xs text-muted-foreground mt-2">Based on 2023–2025 {examMode} data</div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2.5 flex-col sm:flex-row lg:flex-col">
+
+
+            <button onClick={() => setLocation(`/college-finder?rank=${rank}&category=GM&branch=CS`)}
+              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-primary to-violet-600 text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/30">
+              <Target size={14} />
+              Predict Eligible Colleges 🎯
+            </button>
+          </div>
+
+
+
+          {/* Warning Disclaimer */}
+          <div className="flex gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800/50">
+            <AlertCircle size={13} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-amber-700 dark:text-amber-300 leading-normal">
+              Rank prediction is an estimate based on historical {examMode} trends. Always verify details with the official KEA counseling portal.
+            </p>
+          </div>
+
+        </div>
+
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-# PredictRank - robots.txt
-# https://predictrank.in
+# RankPrediction - robots.txt
+# https://rankprediction.com
 
 # Allow all search engine crawlers
 User-agent: *
@@ -35,7 +35,7 @@ User-agent: YandexBot
 Allow: /
 
 # Host
-Host: https://predictrank.in
+Host: https://rankprediction.com
 
 # Sitemap
-Sitemap: https://predictrank.in/sitemap.xml
+Sitemap: https://rankprediction.com/sitemap.xml

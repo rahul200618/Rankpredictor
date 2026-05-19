@@ -8,6 +8,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // ─── Simulated User Type ──────────────────────────────────────────────────────
 interface SimulatedUser {
@@ -21,6 +22,7 @@ interface AuthContextType {
   user: User | SimulatedUser | null;
   loading: boolean;
   isAdmin: boolean;
+  isDeveloper: boolean;
   isSimulated: boolean;
   sendOtp: (phone: string) => Promise<void>;
   verifyOtp: (otp: string) => Promise<any>;
@@ -28,13 +30,14 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
-// ─── Admin phone list ────────────────────────────────────────────────────────
-const ADMIN_PHONES = ["+919999999999", "+917026802690"];
+// ─── Developer phone list ────────────────────────────────────────────────────────
+const DEVELOPER_PHONES = ["+916360749270", "+917026802690"];
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   isAdmin: false,
+  isDeveloper: false,
   isSimulated: true,
   sendOtp: async () => {},
   verifyOtp: async () => { throw new Error("Not ready"); },
@@ -48,6 +51,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | SimulatedUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [simPhone, setSimPhone] = useState<string>("");
+  const [dynamicAdminPhones, setDynamicAdminPhones] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const { data, error } = await supabase.from("app_settings").select("*").eq("setting_key", "admin_phones").single();
+        if (data && data.setting_value) {
+          try {
+            const parsed = typeof data.setting_value === 'string' ? JSON.parse(data.setting_value) : data.setting_value;
+            if (Array.isArray(parsed)) setDynamicAdminPhones(parsed);
+          } catch(e) {}
+        }
+      } catch (e) {
+        console.error("Error fetching admin phones", e);
+      }
+    };
+    fetchAdmins();
+  }, []);
 
   // Determine if we should run in zero-configuration simulation mode
   const isSimulated =
@@ -58,12 +79,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Session Sync (Supports local HMR/refresh persistence) ──────────────────
   useEffect(() => {
     if (isSimulated) {
-      const stored = localStorage.getItem("predictrank_sim_user");
+      const stored = localStorage.getItem("rankprediction_sim_user");
       if (stored) {
         try {
           setUser(JSON.parse(stored));
         } catch {
-          localStorage.removeItem("predictrank_sim_user");
+          localStorage.removeItem("rankprediction_sim_user");
         }
       }
       setLoading(false);
@@ -112,9 +133,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const simUser: SimulatedUser = {
         uid: `sim-user-${simPhone}`,
         phoneNumber: simPhone,
-        displayName: localStorage.getItem("predictrank_sim_name") || null,
+        displayName: localStorage.getItem("rankprediction_sim_name") || null,
       };
-      localStorage.setItem("predictrank_sim_user", JSON.stringify(simUser));
+      localStorage.setItem("rankprediction_sim_user", JSON.stringify(simUser));
       setUser(simUser);
       return simUser;
     }
@@ -128,9 +149,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Update display name ────────────────────────────────────────────────────
   const updateDisplayName = async (name: string) => {
     if (isSimulated) {
-      localStorage.setItem("predictrank_sim_name", name);
+      localStorage.setItem("rankprediction_sim_name", name);
       const updatedUser = { ...user, displayName: name } as SimulatedUser;
-      localStorage.setItem("predictrank_sim_user", JSON.stringify(updatedUser));
+      localStorage.setItem("rankprediction_sim_user", JSON.stringify(updatedUser));
       setUser(updatedUser);
       return;
     }
@@ -144,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Sign Out ───────────────────────────────────────────────────────────────
   const signOut = async () => {
     if (isSimulated) {
-      localStorage.removeItem("predictrank_sim_user");
+      localStorage.removeItem("rankprediction_sim_user");
       setUser(null);
       return;
     }
@@ -159,11 +180,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return "phoneNumber" in user ? (user.phoneNumber ?? "") : "";
   };
 
-  const isAdmin = ADMIN_PHONES.includes(getPhoneNumber());
+  const currentPhone = getPhoneNumber();
+  const isDeveloper = DEVELOPER_PHONES.includes(currentPhone);
+  const isAdmin = isDeveloper || dynamicAdminPhones.includes(currentPhone);
 
   return (
     <AuthContext.Provider value={{
-      user, loading, isAdmin, isSimulated,
+      user, loading, isAdmin, isDeveloper, isSimulated,
       sendOtp, verifyOtp, updateDisplayName, signOut,
     }}>
       {/* Invisible reCAPTCHA anchor */}

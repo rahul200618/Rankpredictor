@@ -15,13 +15,13 @@ const BASE_KEYWORDS = 'KCET, KCET 2026, KCET 2025, Karnataka CET, KEA, Karnataka
 export function SEO({
     title,
     description,
-    url = typeof window !== 'undefined' ? window.location.href : 'https://predictrank.in',
+    url = typeof window !== 'undefined' ? window.location.href : 'https://rankprediction.com',
     type = 'website',
-    image = typeof window !== 'undefined' ? `${window.location.origin}/icon-512x512.png` : 'https://predictrank.in/icon-512x512.png',
+    image = typeof window !== 'undefined' ? `${window.location.origin}/icon-512x512.png` : 'https://rankprediction.com/icon-512x512.png',
     keywords = '',
     jsonLd,
 }: SEOProps) {
-    const fullTitle = `${title} | PredictRank`;
+    const fullTitle = `${title} | RankPrediction`;
     const allKeywords = keywords ? `${keywords}, ${BASE_KEYWORDS}` : BASE_KEYWORDS;
 
     return (
@@ -31,7 +31,7 @@ export function SEO({
             <meta name="description" content={description} />
             <meta name="keywords" content={allKeywords} />
             <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-            <meta name="author" content="PredictRank" />
+            <meta name="author" content="RankPrediction" />
             {url && <link rel="canonical" href={url} />}
 
             {/* Open Graph / Facebook */}
@@ -40,7 +40,7 @@ export function SEO({
             <meta property="og:type" content={type} />
             <meta property="og:url" content={url} />
             <meta property="og:image" content={image} />
-            <meta property="og:site_name" content="PredictRank" />
+            <meta property="og:site_name" content="RankPrediction" />
             <meta property="og:locale" content="en_IN" />
 
             {/* Twitter */}

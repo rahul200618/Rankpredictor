@@ -1,6 +1,6 @@
 {
-  "name": "KCET Coded - KCET Helping Hub",
-  "short_name": "KCET Coded",
+  "name": "RankPredictor - KCET Helping Hub",
+  "short_name": "RankPredictor",
   "description": "Your comprehensive guide to KCET admissions with cutoff data, rank prediction, and college finder",
   "start_url": "/",
   "display": "standalone",

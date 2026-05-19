@@ -5,10 +5,11 @@ import { Redirect } from "wouter";
 interface ProtectedRouteProps {
   children: React.ReactNode;
   adminOnly?: boolean;
+  developerOnly?: boolean;
 }
 
-export default function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
-  const { user, loading, isAdmin } = useAuth();
+export default function ProtectedRoute({ children, adminOnly = false, developerOnly = false }: ProtectedRouteProps) {
+  const { user, loading, isAdmin, isDeveloper } = useAuth();
 
   if (loading) {
     return (
@@ -22,7 +23,8 @@ export default function ProtectedRoute({ children, adminOnly = false }: Protecte
   }
 
   if (!user) return <Redirect to="/auth" />;
-  if (adminOnly && !isAdmin) return <Redirect to="/" />;
+  if (developerOnly && !isDeveloper) return <Redirect to="/" />;
+  if (adminOnly && !isAdmin && !isDeveloper) return <Redirect to="/" />;
 
   return <>{children}</>;
 }

@@ -52,108 +52,108 @@
 
 /* ─── Design Tokens ─── */
 :root {
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
+  --background: 210 40% 96.1%; /* #F1F5F9 */
+  --foreground: 222 47% 11%; /* #111827 */
 
-  --card: 0 0% 100%;
+  --card: 0 0% 100%; /* #FFFFFF */
   --card-foreground: 222 47% 11%;
   --card-border: 214 32% 91%;
 
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
-  --popover-border: 214 32% 91%;
+  --popover-border: 240 15% 92%;
 
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
+  --primary: 215 25% 27%; /* #334155 */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 40% 96.1%;
+  --secondary: 240 10% 95%;
   --secondary-foreground: 222.2 47.4% 11.2%;
 
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted: 240 10% 95%;
+  --muted-foreground: 240 12% 45%;
 
-  --accent: 210 40% 96.1%;
+  --accent: 240 10% 95%;
   --accent-foreground: 222.2 47.4% 11.2%;
 
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
+  --border: 240 15% 91%;
+  --input: 240 15% 91%;
+  --ring: 250 84% 54%;
 
-  --sidebar: 222 47% 8%;
+  --sidebar: 224 47% 6%;
   --sidebar-foreground: 213 31% 88%;
-  --sidebar-border: 216 34% 17%;
-  --sidebar-primary: 217 91% 60%;
+  --sidebar-border: 240 15% 14%;
+  --sidebar-primary: 250 84% 58%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 216 34% 15%;
+  --sidebar-accent: 240 15% 12%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 217 91% 60%;
+  --sidebar-ring: 250 84% 58%;
 
-  --chart-1: 221 83% 53%;
+  --chart-1: 250 84% 54%;
   --chart-2: 173 58% 39%;
   --chart-3: 199 89% 48%;
   --chart-4: 43 74% 66%;
   --chart-5: 27 87% 67%;
 
   --radius: 0.5rem;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(0,0,0, .025);
+  --elevate-2: rgba(0,0,0, .065);
 
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
 }
 
 .dark {
-  --background: 224 71% 4%;
+  --background: 222 47% 4.5%;
   --foreground: 213 31% 91%;
 
-  --card: 222 47% 7%;
+  --card: 222 47% 7.5%;
   --card-foreground: 213 31% 91%;
-  --card-border: 216 34% 17%;
+  --card-border: 222 47% 12%;
 
-  --popover: 222 47% 7%;
+  --popover: 222 47% 7.5%;
   --popover-foreground: 213 31% 91%;
-  --popover-border: 216 34% 17%;
+  --popover-border: 222 47% 12%;
 
-  --primary: 217 91% 60%;
+  --primary: 244 96% 66%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 222 47% 11%;
+  --secondary: 222 47% 10%;
   --secondary-foreground: 210 40% 98%;
 
-  --muted: 222 47% 11%;
+  --muted: 222 47% 10%;
   --muted-foreground: 215.4 16.3% 56.9%;
 
-  --accent: 216 34% 17%;
+  --accent: 222 47% 12%;
   --accent-foreground: 210 40% 98%;
 
   --destructive: 359 84% 60%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 216 34% 17%;
-  --input: 216 34% 17%;
-  --ring: 217 91% 60%;
+  --border: 222 47% 12%;
+  --input: 222 47% 12%;
+  --ring: 244 96% 66%;
 
-  --sidebar: 224 71% 4%;
+  --sidebar: 222 47% 4.5%;
   --sidebar-foreground: 213 31% 91%;
-  --sidebar-border: 216 34% 17%;
-  --sidebar-primary: 217 91% 60%;
+  --sidebar-border: 222 47% 12%;
+  --sidebar-primary: 244 96% 66%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 216 34% 17%;
+  --sidebar-accent: 222 47% 11%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 217 91% 60%;
+  --sidebar-ring: 244 96% 66%;
 
-  --chart-1: 217 91% 60%;
+  --chart-1: 244 96% 66%;
   --chart-2: 173 58% 39%;
   --chart-3: 199 89% 48%;
   --chart-4: 43 74% 66%;
   --chart-5: 27 87% 67%;
 
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255,255,255, .035);
+  --elevate-2: rgba(255,255,255, .075);
 }
 
 /* ─── Custom Animations ─── */

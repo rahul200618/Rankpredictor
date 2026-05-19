@@ -14,6 +14,7 @@ import CollegeFinder from "@/pages/CollegeFinder";
 import CollegeDetail from "@/pages/CollegeDetail";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
+import DeveloperPage from "@/pages/DeveloperPage";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,9 @@ function AppRoutes() {
       </Route>
       <Route path="/admin">
         <ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>
+      </Route>
+      <Route path="/developer">
+        <ProtectedRoute developerOnly><DeveloperPage /></ProtectedRoute>
       </Route>
       <Route component={NotFound} />
     </Switch>
