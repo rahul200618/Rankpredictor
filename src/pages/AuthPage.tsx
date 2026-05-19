@@ -116,7 +116,7 @@ export default function AuthPage() {
         title: "🎉 Registration Complete",
         description: `Welcome to RankPrediction, ${name.trim()}!`,
       });
-      navigate("/");
+      navigate("/rank-predictor");
     } catch (err: any) {
       setError(err.message ?? "Registration failed. Please try again.");
     } finally {

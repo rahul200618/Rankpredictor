@@ -60,7 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await supabase.from("app_settings").select("*").eq("setting_key", "admin_phones").single();
         if (data?.setting_value) {
           try {
-            const parsed = typeof data.setting_value === 'string' ? JSON.parse(data.setting_value) : data.setting_value;
+            let val = data.setting_value;
+            let parsed = typeof val === 'string' ? val : JSON.stringify(val);
+            try {
+              const j = JSON.parse(parsed);
+              parsed = Array.isArray(j) ? j : [parsed];
+            } catch {
+              parsed = parsed.split(",").map((p: string) => p.trim());
+            }
             if (Array.isArray(parsed)) setDynamicAdminPhones(parsed);
           } catch(e) {}
         }
@@ -79,7 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         (payload) => {
           try {
             const val = (payload.new as any)?.setting_value;
-            const parsed = typeof val === 'string' ? JSON.parse(val) : val;
+            let parsed = typeof val === 'string' ? val : JSON.stringify(val);
+            try {
+              const j = JSON.parse(parsed);
+              parsed = Array.isArray(j) ? j : [parsed];
+            } catch {
+              parsed = parsed.split(",").map((p: string) => p.trim());
+            }
             if (Array.isArray(parsed)) setDynamicAdminPhones(parsed);
           } catch(e) {}
         }
@@ -130,14 +143,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Real Firebase Setup
-    let verifier = (window as any)._recaptchaVerifier;
-    if (!verifier) {
-      verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-        callback: () => {},
-      });
-      (window as any)._recaptchaVerifier = verifier;
+    // Clear any stale verifier instance to prevent "reCAPTCHA client element has been removed" on page transitions
+    if ((window as any)._recaptchaVerifier) {
+      try {
+        (window as any)._recaptchaVerifier.clear();
+      } catch (e) {
+        console.warn("Failed to clear stale recaptcha: ", e);
+      }
+      (window as any)._recaptchaVerifier = null;
     }
+
+    const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+      size: "invisible",
+      callback: () => {},
+    });
+    (window as any)._recaptchaVerifier = verifier;
 
     confirmationResultRef = await signInWithPhoneNumber(auth, phone, verifier);
   };
@@ -199,8 +219,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const currentPhone = getPhoneNumber();
-  const isDeveloper = DEVELOPER_PHONES.includes(currentPhone);
-  const isAdmin = isDeveloper || dynamicAdminPhones.includes(currentPhone);
+  const normalizedCurrent = currentPhone.replace(/\D/g, "").slice(-10);
+  
+  const isDeveloper = DEVELOPER_PHONES.some(p => p.replace(/\D/g, "").slice(-10) === normalizedCurrent && normalizedCurrent !== "");
+  const isAdmin = isDeveloper || dynamicAdminPhones.some(p => p.replace(/\D/g, "").slice(-10) === normalizedCurrent && normalizedCurrent !== "");
 
   return (
     <AuthContext.Provider value={{
@@ -208,7 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sendOtp, verifyOtp, updateDisplayName, signOut,
     }}>
       {/* Invisible reCAPTCHA anchor */}
-      <div id="recaptcha-container" style={{ display: "none" }} />
+      <div id="recaptcha-container" />
       {children}
     </AuthContext.Provider>
   );
