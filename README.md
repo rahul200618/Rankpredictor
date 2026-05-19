@@ -1,64 +1,114 @@
-# RankPrediction
+![React](https://img.shields.io/badge/React-18-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-blue)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)
 
-RankPrediction (rankprediction.com) is a student-focused counseling intelligence platform for KCET and COMEDK aspirants. It turns cutoff data, rank prediction, college discovery, and counseling guidance into one fast web app.
+# RankPrediction 🎓
 
-## What it does
+🌐 Live: https://rankprediction.com
+---
 
-- KCET and COMEDK mode-aware rank prediction
-- College discovery and cutoff exploration
-- Counseling enquiry capture and admin review
-- Reviews, feedback, and moderation surfaces
-- XLSX-backed cutoff loading for college discovery
+## 🌐 Live Website
 
-## Tech Stack
+Visit RankPrediction:
 
+[rankprediction.com](https://reference-url-citation.invalid/0)
+ 
+
+RankPrediction is a student-focused counseling intelligence platform for KCET and COMEDK aspirants that combines rank prediction, cutoff analysis, college discovery, and counseling guidance into a single web application.
+
+> Helping students make better admission decisions using data-driven insights.
+
+---
+
+
+## 🚀 Features
+
+### Counseling Tools
+- 🎯 Rank Predictor (KCET & COMEDK mode-aware)
+- 📊 Cutoff Explorer
+- 🏫 College Finder
+- 📈 Round Tracker
+- 📖 Counseling Guide
+- 🤖 AI Counselor
+
+### Community & Support
+- ⭐ Reviews & feedback
+- 💡 Feature requests
+- 📩 Counseling enquiry system
+- 🛡️ Admin moderation dashboard
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
 - React 18
 - TypeScript
 - Vite
 - Tailwind CSS
-- Wouter routing
+- Wouter
+- Framer Motion
+
+### Backend & Services
 - Supabase
-- Firebase Auth
-- Vercel serverless functions
-- XLSX, jsPDF, pdfjs-dist, Recharts, Framer Motion
+- Firebase Authentication
+- Vercel Serverless Functions
 
-## Project Structure
+### Libraries
+- XLSX
+- jsPDF
+- pdfjs-dist
+- Recharts
 
-- `src/pages/` - route-level pages
-- `src/components/` - shared UI and layout
-- `src/lib/` - business logic, loaders, utilities
-- `src/context/` - app state and auth/mode handling
-- `api/` - serverless endpoints
-- `public/` - static assets and data files
-- `supabase/` - database schema and SQL scripts
-- `scripts/` - import, extraction, news, and maintenance scripts
+---
 
-## Main Features
+## 📂 Project Structure
 
-### Counseling tools
+```bash
+RankPrediction/
+├── src/
+│   ├── pages/         # Route-level pages
+│   ├── components/    # Shared UI
+│   ├── lib/           # Business logic & utilities
+│   ├── context/       # Global state & auth
+│
+├── api/               # Serverless functions
+├── public/            # Assets and datasets
+├── supabase/          # SQL schemas & scripts
+├── scripts/           # Data processing scripts
+```
 
-- Rank Predictor
-- Cutoff Explorer
-- College Finder
-- Round Tracker
-- Councelling guide
+---
 
-### Community and support
+## 📊 Data Sources
 
-- Reviews
-- Feature requests
-- Counseling enquiries
-- Admin moderation and review views
-- AI Counselor
+- KCET cutoff datasets
+- COMEDK cutoff datasets
+- College metadata
+- Supabase-managed app data
 
-## Key Data Sources
+Stored in:
 
-- KCET cutoff datasets in `public/data/`
-- COMEDK cutoff datasets in `public/data/`
-- College list in `public/colleges-list.json`
-- Supabase tables for app settings, counseling enquiries, and user profiles
+```bash
+public/data/
+public/colleges-list.json
+```
 
-## Setup
+---
+
+## ⚙️ Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/rankprediction.git
+```
+
+Move into project directory:
+
+```bash
+cd rankprediction
+```
 
 Install dependencies:
 
@@ -66,42 +116,75 @@ Install dependencies:
 npm install
 ```
 
-Run the app locally:
+Start development server:
 
 ```bash
 npm run dev
 ```
 
-Build for production:
+Open:
 
 ```bash
-npm run build
+http://localhost:5173
 ```
 
-Run tests:
+---
+
+## 🔧 Scripts
+
+| Command | Description |
+|-----------|------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build production app |
+| `npm run test` | Run tests |
+| `npm run extract:cutoffs` | Extract KCET cutoffs |
+| `npm run extract:comedk` | Extract COMEDK cutoffs |
+| `npm run move:xlsx` | Process XLSX files |
+| `npm run build:summary` | Generate summaries |
+
+---
+
+## 🔐 Authentication & Security
+
+- Phone-based authentication
+- Protected admin/developer routes
+- Supabase-backed enquiry storage
+- Validation and logging for serverless endpoints
+- reCAPTCHA + phone verification support
+
+---
+
+## 🌍 Environment Variables
+
+Create a `.env` file:
+
+```env
+VITE_SUPABASE_URL=your_url
+VITE_SUPABASE_ANON_KEY=your_key
+VITE_FIREBASE_API_KEY=your_key
+```
+
+Refer to:
 
 ```bash
-npm run test
+.env.example
 ```
 
-## Useful Scripts
+---
 
-- `npm run extract:cutoffs`
-- `npm run extract:comedk`
-- `npm run move:xlsx`
-- `npm run build:summary`
+## 📌 Disclaimer
 
-## Environment Notes
+RankPrediction is an independent project and is **not affiliated with KEA or COMEDK**.
 
-The app expects Supabase and Firebase configuration through environment variables. Check `.env.example` if present or review the integration files in `src/integrations/` and `src/lib/`.
+Always verify admission information using official counseling notifications and documents.
 
-## Security and Auth
+---
 
-- Phone-based auth is used for signed-in features
-- Admin and developer routes are protected in the app shell
-- Counseling enquiries are stored in Supabase and reCAPTCHA encryption with phone number verification 
-- Sensitive serverless endpoints use validation and logging helpers
+## ⭐ Support
 
-## Notes
+If you found this project useful:
 
-This project is independent and not affiliated with KEA or COMEDK. Always verify final admission decisions against official documents..
+- Star the repository
+- Report issues
+- Suggest features
+- Share feedback
