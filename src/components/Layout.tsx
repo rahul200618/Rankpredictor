@@ -96,6 +96,67 @@ function DockItem({
   );
 }
 
+function DesktopNavItem({
+  path,
+  label,
+  icon: Icon,
+  color,
+  glow,
+  badge,
+  isActive,
+}: {
+  path: string;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  glow: string;
+  badge?: string;
+  isActive: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <Link
+      href={path}
+      className={`relative flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-sm font-black transition-all duration-300 group overflow-hidden border ${
+        isActive
+          ? "text-white"
+          : "text-white/75 hover:text-white"
+      }`}
+      style={{
+        background: isActive
+          ? `linear-gradient(135deg, ${color}, ${color}dd)`
+          : hovered
+          ? `linear-gradient(135deg, ${color}22, ${color}33)`
+          : "rgba(255,255,255,0.03)",
+        borderColor: hovered || isActive ? `${color}66` : "rgba(255,255,255,0.12)",
+        boxShadow: hovered || isActive ? `0 0 0 1px ${color}22, 0 0 28px ${glow}` : "none",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <span
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ background: `radial-gradient(circle at center, ${glow}, transparent 72%)` }}
+      />
+      <Icon
+        size={16}
+        className={`relative z-10 transition-transform duration-300 ${hovered ? "scale-110" : ""}`}
+        style={{ color: isActive || hovered ? "#ffffff" : color }}
+      />
+      <span className="relative z-10">{label}</span>
+      {badge && (
+        <span
+          className="relative z-10 ml-0.5 text-[9px] px-1.5 py-0.5 rounded-md font-black text-white bg-blue-500 border border-white/15"
+          style={{ lineHeight: 1 }}
+        >
+          {badge}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 function UserMenu({ upwards = false }: { upwards?: boolean }) {
   const { user, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
@@ -185,18 +246,31 @@ function UserMenu({ upwards = false }: { upwards?: boolean }) {
 export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
   const [location] = useLocation();
   const { examMode, setExamMode } = useExamMode();
+  const supabaseAny = supabase as any;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showExamToggle, setShowExamToggle] = useState(false);
+  const [logoSrc, setLogoSrc] = useState("/Ranktransparent.png");
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const { data, error } = await supabase.from("app_settings").select("*");
+        const { data, error } = await supabaseAny.from("app_settings").select("*");
         if (data) {
           const isKcetOn = data.find(d => d.setting_key === "feature_kcet")?.setting_value;
           const isComedkOn = data.find(d => d.setting_key === "feature_comedk")?.setting_value;
-          setShowExamToggle((isKcetOn === "true" || isKcetOn === true) && (isComedkOn === "true" || isComedkOn === true));
+          const kcetEnabled = isKcetOn === "true" || isKcetOn === true;
+          const comedkEnabled = isComedkOn === "true" || isComedkOn === true;
+          const enabledModes = [
+            kcetEnabled ? "KCET" : null,
+            comedkEnabled ? "COMEDK" : null,
+          ].filter(Boolean) as Array<"KCET" | "COMEDK">;
+
+          setShowExamToggle(enabledModes.length > 1);
+
+          if (enabledModes.length === 1 && examMode !== enabledModes[0]) {
+            setExamMode(enabledModes[0]);
+          }
         }
       } catch (err) {
         console.error("Error fetching settings for exam toggle", err);
@@ -216,7 +290,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [examMode, setExamMode]);
 
   useEffect(() => {
     const main = document.getElementById("main-scroll");
@@ -230,61 +304,43 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
 
       {/* ── Top bar ── */}
       <header
-        className={`shrink-0 flex items-center gap-3 px-5 py-3 transition-all duration-300 ${
+        className={`relative shrink-0 flex items-center gap-3 px-5 py-3 transition-all duration-300 ${
           scrolled
             ? "bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border-b border-slate-700/30 shadow-md shadow-slate-900/20 text-slate-50"
             : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700/30 text-slate-50"
         }`}
       >
         {/* Brand */}
-        <Link href="/" className="flex items-center group">
-          <div className="relative h-9 shrink-0 transition-transform group-hover:scale-105 drop-shadow-md">
-            <img src="/my-new-logo.svg" alt="RankPrediction Logo" className="w-auto h-full object-contain" />
+        <Link href="/" className="flex items-center justify-start -ml-4 sm:-ml-5 group shrink-0">
+          <div className="relative h-10 w-[175px] sm:w-[220px] md:w-[280px] overflow-visible shrink-0 transition-all duration-300 group-hover:drop-shadow-[0_0_20px_rgba(96,165,250,0.34)]">
+              <img
+                src={logoSrc}
+                alt="RankPrediction Logo"
+                onError={() => {
+                  if (logoSrc !== "/my-new-logo.svg") setLogoSrc("/my-new-logo.svg");
+                }}
+                className="w-full h-full object-contain scale-[1.42] origin-left transition-transform duration-300 group-hover:scale-[1.5]"
+              />
           </div>
         </Link>
 
         <div className="flex-1 md:hidden" />
 
         {/* Center Desktop Navigation Pill */}
-        <nav className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md shadow-inner">
+        <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-2 p-1.5 rounded-[22px] border border-white/20 bg-white/8 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
           {navItems.map(({ path, label, icon: Icon, color, glow, badge }) => {
             const isActive = location === path;
             return (
-              <Link
+              <DesktopNavItem
                 key={path}
-                href={path}
-                className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all duration-300 group overflow-hidden ${
-                  isActive
-                    ? "text-white shadow-sm shadow-black/20"
-                    : "text-white/70 hover:text-white"
-                }`}
-                style={{
-                  background: isActive
-                    ? `linear-gradient(135deg, ${color}, ${color}dd)`
-                    : "transparent",
-                }}
-              >
-                <Icon
-                  size={14}
-                  className={`transition-transform duration-300 group-hover:scale-110 ${
-                    isActive ? "text-white animate-bounce-subtle" : "text-white/70 group-hover:text-white"
-                  }`}
-                  style={{ color: isActive ? "#ffffff" : color }}
-                />
-                <span>{label}</span>
-                {badge && (
-                  <span
-                    className="ml-0.5 text-[8px] px-1 py-0.5 rounded font-black text-white bg-blue-500 border border-white/10"
-                    style={{ lineHeight: 1 }}
-                  >
-                    {badge}
-                  </span>
-                )}
-                {/* Micro-sparkle glow pulse on active */}
-                {isActive && (
-                  <span className="absolute inset-0 w-full h-full bg-white/10 mix-blend-overlay animate-pulse-glow" />
-                )}
-              </Link>
+                path={path}
+                label={label}
+                icon={Icon}
+                color={color}
+                glow={glow}
+                badge={badge}
+                isActive={isActive}
+              />
             );
           })}
         </nav>

@@ -81,8 +81,13 @@ export default function AuthPage() {
         try {
           await verifyOtp(code);
           setOtpVerified(true);
-        } catch (verifyErr) {
-          setError("Invalid verification code. Please check and try again.");
+        } catch (verifyErr: any) {
+          const msg = verifyErr?.message ?? "Invalid verification code. Please check and try again.";
+          setError(
+            isSimulated
+              ? `Invalid code. In test mode, use: 123456`
+              : msg
+          );
           setLoading(false);
           return;
         }

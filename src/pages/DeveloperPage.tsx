@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 export default function DeveloperPage() {
   const { isDeveloper, loading: authLoading, sendOtp, verifyOtp, user } = useAuth();
   const [, setLocation] = useLocation();
+  const supabaseAny = supabase as any;
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,7 +42,7 @@ export default function DeveloperPage() {
     const fetchSettings = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.from("app_settings").select("*");
+        const { data, error } = await supabaseAny.from("app_settings").select("*");
         if (error) {
           console.warn("Settings table might not exist yet:", error.message);
           return;
@@ -50,7 +51,7 @@ export default function DeveloperPage() {
         if (data && data.length > 0) {
           const newFeatures = { ...features };
           let loadedAdmins: string[] = [];
-          data.forEach(item => {
+          (data as any[]).forEach(item => {
             if (item.setting_key in newFeatures) {
               (newFeatures as any)[item.setting_key] = item.setting_value === "true" || item.setting_value === true;
             }
@@ -72,6 +73,23 @@ export default function DeveloperPage() {
     };
 
     fetchSettings();
+
+    // Real-time subscription for feature flags and admin settings
+    const channel = supabase
+      .channel("app_settings_realtime_dev")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_settings" },
+        () => {
+          // Refetch settings when any change occurs
+          fetchSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isDeveloper, authLoading, setLocation]);
 
   const handleSendOtp = async () => {
@@ -122,7 +140,7 @@ export default function DeveloperPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updates = Object.entries(features).map(([key, value]) => ({
+      const updates: Array<{ setting_key: string; setting_value: any; updated_at: string }> = Object.entries(features).map(([key, value]) => ({
         setting_key: key,
         setting_value: value,
         updated_at: new Date().toISOString()
@@ -134,17 +152,44 @@ export default function DeveloperPage() {
         updated_at: new Date().toISOString()
       });
 
-      const { error } = await supabase.rpc("secure_update_app_settings", {
+      const rpcResult = await supabaseAny.rpc("secure_update_app_settings", {
         p_updates: updates,
         p_secret: "my_super_secret_developer_key_2026"
       });
       
-      if (error) throw error;
+      if (rpcResult.error) {
+        const rpcMessage = rpcResult.error.message || "";
+        const shouldFallbackToTableWrite = /schema cache|could not find the function|app_settings/i.test(rpcMessage);
+
+        if (shouldFallbackToTableWrite) {
+          const fallbackResult = await supabaseAny
+            .from("app_settings")
+            .upsert(updates, { onConflict: "setting_key" });
+
+          if (fallbackResult.error) {
+            throw fallbackResult.error;
+          }
+        } else {
+          throw rpcResult.error;
+        }
+      }
       
-      toast({ title: "Settings Saved", description: "Developer configuration updated successfully." });
+      toast({ 
+        title: "✅ Settings Saved", 
+        description: "Developer configuration updated successfully. Changes will appear in real-time across the platform." 
+      });
+      
+      // Settings will auto-refresh via real-time subscription
     } catch (err: any) {
       console.error("Error saving settings", err);
-      toast({ title: "Error", description: err?.message || "Could not save settings.", variant: "destructive" });
+      const errorMsg = err?.message || "Could not save settings.";
+      toast({ 
+        title: "❌ Save Failed", 
+        description: errorMsg.includes("app_settings") 
+          ? "Supabase could not save the settings. Run app_settings.sql in the Supabase SQL Editor, then refresh this page."
+          : errorMsg,
+        variant: "destructive" 
+      });
     } finally {
       setSaving(false);
     }

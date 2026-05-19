@@ -33,6 +33,43 @@ BEGIN;
 COMMIT;
 ALTER PUBLICATION supabase_realtime ADD TABLE app_settings;
 
+-- Create RPC function for secure updates
+DROP FUNCTION IF EXISTS public.secure_update_app_settings(jsonb, text);
+CREATE OR REPLACE FUNCTION public.secure_update_app_settings(
+  p_updates jsonb,
+  p_secret text
+)
+RETURNS TABLE(success boolean, message text) AS $$
+DECLARE
+  v_item jsonb;
+  v_key text;
+  v_value jsonb;
+BEGIN
+  -- Validate secret key
+  IF p_secret != 'my_super_secret_developer_key_2026' THEN
+    RETURN QUERY SELECT false, 'Unauthorized: Invalid secret key'::text;
+    RETURN;
+  END IF;
+
+  -- Process each update
+  FOR v_item IN SELECT jsonb_array_elements(p_updates)
+  LOOP
+    v_key := v_item->>'setting_key';
+    v_value := v_item->'setting_value';
+    
+    -- Upsert the setting
+    INSERT INTO public.app_settings (setting_key, setting_value, updated_at)
+    VALUES (v_key, v_value, now())
+    ON CONFLICT (setting_key) 
+    DO UPDATE SET 
+      setting_value = v_value,
+      updated_at = now();
+  END LOOP;
+
+  RETURN QUERY SELECT true, 'Settings updated successfully'::text;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Insert default settings
 INSERT INTO public.app_settings (setting_key, setting_value, description)
 VALUES 

@@ -17,7 +17,7 @@ const tips = [
   "Allied Science streams are experiencing higher demand in 2026",
 ];
 
-const faqs = [
+const faqsKcet = [
   {
     q: "How accurate is the KCET Rank Predictor?",
     a: "Our algorithm uses the official KEA scoring model combined with actual KCET and Board averages. Since 2026 cutoffs depend on paper difficulty and student averages, we provide a calibrated High/Moderate/Borderline confidence range to give you the most realistic estimate.",
@@ -32,7 +32,26 @@ const faqs = [
   },
   {
     q: "How does the College Predictor work?",
-    a: "The College Predictor maps your KEA rank directly against 3 consecutive years of round-by-round counseling data. It categorizes eligible choices into clear probability brackets so you can plan your option entry intelligently.",
+    a: "The College Predictor maps your KEA rank directly against 3 consecutive years of round-by-round KCET counseling data. It categorizes eligible choices into clear probability brackets so you can plan your option entry intelligently.",
+  },
+];
+
+const faqsComedk = [
+  {
+    q: "How accurate is the COMEDK Rank Predictor?",
+    a: "Our algorithm uses the official COMEDK scoring model combined with actual exam scores and Board averages. Since 2026 cutoffs depend on paper difficulty and student performance, we provide a calibrated High/Moderate/Borderline confidence range to give you the most realistic estimate.",
+  },
+  {
+    q: "What is the COMEDK score calculation?",
+    a: "COMEDK uses a comprehensive scoring model that evaluates your performance across all sections. Our predictor incorporates historical patterns and student metrics to give you an accurate rank estimate for your specific branch and category.",
+  },
+  {
+    q: "Is this platform really 100% free?",
+    a: "Yes! Powered by the Vidhyarthi Sewa Trust, this platform is completely free for all students. Our goal is to democratize high-quality counseling analytics without any paywalls or ads.",
+  },
+  {
+    q: "How does the College Predictor work for COMEDK?",
+    a: "The College Predictor maps your COMEDK rank directly against historical round-by-round counseling data. It categorizes eligible choices into clear probability brackets so you can plan your option entry intelligently.",
   },
 ];
 
@@ -44,10 +63,12 @@ const STREAMS = [
 ];
 
 export default function Home() {
-  const { examMode } = useExamMode();
+  const { examMode, setExamMode } = useExamMode();
+  const supabaseAny = supabase as any;
   const [tipIndex, setTipIndex] = useState(0);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [availableExamModes, setAvailableExamModes] = useState<Array<"KCET" | "COMEDK">>([]);
 
   // Counseling Enquiry Form State
   const [enquiryName, setEnquiryName] = useState("");
@@ -65,6 +86,37 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    const fetchExamFlags = async () => {
+      try {
+        const { data } = await supabaseAny.from("app_settings").select("*");
+        if (!data) return;
+
+        const isKcetOn = data.find((d: any) => d.setting_key === "feature_kcet")?.setting_value;
+        const isComedkOn = data.find((d: any) => d.setting_key === "feature_comedk")?.setting_value;
+
+        const kcetEnabled = isKcetOn === "true" || isKcetOn === true;
+        const comedkEnabled = isComedkOn === "true" || isComedkOn === true;
+        const enabledModes = [
+          kcetEnabled ? "KCET" : null,
+          comedkEnabled ? "COMEDK" : null,
+        ].filter(Boolean) as Array<"KCET" | "COMEDK">;
+
+        setAvailableExamModes(enabledModes);
+
+        if (enabledModes.length === 1 && examMode !== enabledModes[0]) {
+          setExamMode(enabledModes[0]);
+        }
+      } catch (err) {
+        console.error("Error fetching exam flags on home page", err);
+      }
+    };
+
+    fetchExamFlags();
+  }, [examMode, setExamMode]);
+
+  const displayExamMode = availableExamModes.length === 1 ? availableExamModes[0] : examMode;
+
   // Offline Fallback Auto-Synchronization Effect (online fallback sync back)
   useEffect(() => {
     const syncEnquiries = async () => {
@@ -75,7 +127,7 @@ export default function Home() {
         if (enquiries.length === 0) return;
 
         console.log(`Attempting to sync ${enquiries.length} offline enquiries back to database...`);
-        const { error } = await supabase.from("counseling_enquiries").insert(
+        const { error } = await supabaseAny.from("counseling_enquiries").insert(
           enquiries.map((e: any) => ({
             name: e.name,
             phone: e.phone,
@@ -125,7 +177,7 @@ export default function Home() {
     };
 
     try {
-      const { error } = await supabase.from("counseling_enquiries").insert([payload]);
+      const { error } = await supabaseAny.from("counseling_enquiries").insert([payload]);
 
       if (error) throw error;
 
@@ -173,7 +225,7 @@ export default function Home() {
             {/* Headline */}
             <h1 className="animate-slide-up text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
               <span className="gradient-text">Crack</span>{" "}
-              <span className="text-foreground">{examMode}</span><br />
+              <span className="text-foreground">{displayExamMode}</span><br />
               <span className="text-foreground">counseling with</span>{" "}
               <span className="gradient-text">absolute confidence</span>
             </h1>
@@ -208,7 +260,9 @@ export default function Home() {
               href: "/rank-predictor",
               icon: Target,
               label: "Rank Predictor",
-              desc: "Input your actual or expected KCET marks & PUC board average. See KEA Score calculations and predicted rank ranges instantly.",
+              desc: displayExamMode === "KCET" 
+                ? "Input your actual or expected KCET marks & PUC board average. See KEA Score calculations and predicted rank ranges instantly."
+                : "Input your actual or expected COMEDK marks. Get accurate rank predictions and confidence brackets for your specific branch.",
               gradient: "from-blue-500 to-indigo-600",
               glow: "rgba(99,102,241,0.25)",
               bg: "#6366f115",
@@ -220,7 +274,9 @@ export default function Home() {
               href: "/college-finder",
               icon: BookOpen,
               label: "Predict Colleges",
-              desc: "Predict target colleges based on your rank, branch, and reservations. Maps round cutoffs with high/moderate prediction badges.",
+              desc: displayExamMode === "KCET"
+                ? "Predict target colleges based on your KEA rank, branch, and reservations. Maps round cutoffs with high/moderate prediction badges."
+                : "Predict target colleges based on your COMEDK rank, branch, and reservations. Maps counseling data with prediction confidence.",
               gradient: "from-violet-500 to-purple-600",
               glow: "rgba(139,92,246,0.25)",
               bg: "#8b5cf615",
@@ -553,11 +609,10 @@ export default function Home() {
         <div className="text-center space-y-2">
           <HelpCircle size={24} className="text-primary mx-auto" />
           <h2 className="text-2xl font-extrabold text-foreground">Frequently Asked Questions</h2>
-          <p className="text-xs text-muted-foreground">Clear answers to common questions about Karnataka KEA counseling and predictions.</p>
+          <p className="text-xs text-muted-foreground">Clear answers to common questions about {displayExamMode} counseling and predictions.</p>
         </div>
 
-        <div className="space-y-3.5">
-          {faqs.map(({ q, a }, i) => {
+          {(displayExamMode === "KCET" ? faqsKcet : faqsComedk).map(({ q, a }, i) => {
             const isOpen = activeFaq === i;
             return (
               <div 
@@ -584,7 +639,6 @@ export default function Home() {
               </div>
             );
           })}
-        </div>
       </section>
 
     </div>

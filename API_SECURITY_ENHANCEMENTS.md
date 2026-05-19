@@ -8,27 +8,11 @@ This document outlines all backend security improvements implemented for the KCE
 **File**: `api/utils/rateLimiter.ts`
 
 **Features:**
-- Per-client rate limiting using IP address/forwarded headers
-- Gemini API: 30 requests per minute
-- General API: 100 requests per minute
+
 - In-memory store with automatic cleanup
 - Client ID detection (x-forwarded-for, cf-connecting-ip, remote IP)
 - Retry-After headers in responses
 
-**Usage:**
-```typescript
-import { checkRateLimit, getClientId } from './utils/rateLimiter';
-
-const clientId = getClientId(req);
-const check = checkRateLimit(clientId, 'GEMINI_API');
-if (!check.allowed) {
-  return res.status(429).json({ error: 'Too many requests' });
-}
-```
-
-**Production Note**: For high-traffic systems, replace in-memory store with Redis/Memcached
-
----
 
 ### 2. **Request Validation & Sanitization** ✨ ENHANCED
 **File**: `api/utils/validation.ts`
@@ -42,18 +26,7 @@ if (!check.allowed) {
 - Secure header configuration
 - Generic error messages (no sensitive data leaks)
 
-**Usage:**
-```typescript
-import { validateMessages, setSecureHeaders } from './utils/validation';
 
-const validation = validateMessages(req.body.messages);
-if (!validation.valid) {
-  return res.status(400).json({ error: validation.error });
-}
-setSecureHeaders(res);
-```
-
----
 
 ### 3. **API Request Logging & Audit Trail** ✨ NEW
 **File**: `api/utils/logger.ts`
