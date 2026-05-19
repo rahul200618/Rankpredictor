@@ -6,12 +6,6 @@
 
 🌐 Live: https://rankprediction.com
 ---
-
-## 🌐 Live Website
-
-Visit RankPrediction:
-
-[rankprediction.com](https://reference-url-citation.invalid/0)
  
 
 RankPrediction is a student-focused counseling intelligence platform for KCET and COMEDK aspirants that combines rank prediction, cutoff analysis, college discovery, and counseling guidance into a single web application.
@@ -188,3 +182,43 @@ If you found this project useful:
 - Report issues
 - Suggest features
 - Share feedback
+
+
+
+
+## 🤝 Contributions
+
+Contributions are welcome through pull requests and project collaboration.
+
+By contributing to this repository, contributors agree that all submitted code, fixes, features, and improvements become part of RankPrediction and may be used, modified, or maintained by the project owner.
+
+Contributing does not grant rights to copy, redistribute, or reuse the project outside of RankPrediction.
+
+---
+
+## 📜 License
+
+Copyright © 2026 RankPrediction
+
+All Rights Reserved.
+
+This repository is publicly visible for transparency and collaboration purposes only.
+
+Permission is granted only for viewing and contributing to this project through approved repository workflows (issues, pull requests, and collaboration).
+
+Unauthorized copying, redistribution, commercial use, or creation of derivative works outside this repository is prohibited.
+
+
+Copyright © 2026 RankPrediction
+
+All Rights Reserved.
+
+This software and associated files are proprietary.
+
+This repository is made publicly accessible solely for viewing and contribution purposes.
+
+Viewing or contributing to this repository does not grant permission to copy, redistribute, sublicense, commercially use, or create derivative works from this software outside the RankPrediction project.
+
+Contributors agree that submitted contributions become part of RankPrediction and remain subject to this license.
+
+All rights not expressly granted are reserved.
