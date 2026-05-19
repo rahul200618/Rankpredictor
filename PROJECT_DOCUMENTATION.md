@@ -80,9 +80,9 @@ The following facts are derived from the repository state currently present in t
 
 | Area | Current state |
 | --- | --- |
-| Route declarations in `src/App.tsx` | 36 declared routes |
-| Unique route paths | 34 unique paths |
-| Duplicate route quirk | `/college-cutoffs` is declared three times |
+| Route declarations in `src/App.tsx` | 7 declared routes |
+| Unique route paths | 7 unique paths |
+| Duplicate route quirk | None in the current router |
 | Core cutoff dataset | 216,893 cutoff rows in `public/data/kcet_cutoffs_high_volume.json` |
 | Years covered | 2023, 2024, 2025 |
 | Rounds covered | MOCK, R1, R2, R3 |
@@ -1003,5 +1003,6 @@ If this document is updated in the future, the following items should be re-chec
 - whether admin auth remains client-side
 - whether PWA/offline behavior changes
 - whether naming is finally unified across package metadata, UI, and docs
+- whether older docs still reflect the current router and current backend schema
 
 This document should remain a living audit, not another stale overview.

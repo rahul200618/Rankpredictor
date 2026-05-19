@@ -24,7 +24,7 @@ export default function ProtectedRoute({ children, adminOnly = false, developerO
 
   if (!user) return <Redirect to="/auth" />;
   if (developerOnly && !isDeveloper) return <Redirect to="/" />;
-  if (adminOnly && !isAdmin && !isDeveloper) return <Redirect to="/" />;
+  if (adminOnly && !isAdmin) return <Redirect to="/" />;
 
   return <>{children}</>;
 }
