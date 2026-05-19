@@ -167,9 +167,8 @@ export default function Home() {
       <div className="fixed top-1/2 -left-32 w-96 h-96 rounded-full bg-violet-500/5 blur-3xl animate-blob pointer-events-none -z-10" style={{ animationDelay: "3s" }} />
 
       {/* ── HERO HEADER SECTION ── */}
-      <section className="relative max-w-5xl mx-auto px-5 pt-12 text-center md:text-left">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-          <div className="md:col-span-8 space-y-6">
+      <section className="relative max-w-4xl mx-auto px-5 pt-16 pb-4 text-center">
+        <div className="flex flex-col items-center space-y-8">
 
             {/* Headline */}
             <h1 className="animate-slide-up text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
@@ -180,45 +179,19 @@ export default function Home() {
             </h1>
 
             {/* Subtext */}
-            <p className="animate-slide-up delay-100 text-base md:text-lg text-muted-foreground max-w-2xl leading-relaxed">
+            <p className="animate-slide-up delay-100 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Predict your expected rank, analyze 3 years of official round cutoffs, find the right matches, and build your smart option entry list — built for students.
             </p>
 
             {/* Action CTAs */}
-            <div className="animate-slide-up delay-150 flex flex-wrap justify-center md:justify-start items-center gap-4">
+            <div className="animate-slide-up delay-150 flex flex-wrap justify-center items-center gap-4">
               <Link
                 href="/rank-predictor"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-xl text-sm font-black hover:opacity-95 transition-all hover:scale-105 shadow-lg shadow-primary/25"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl text-base md:text-lg font-black hover:bg-blue-700 transition-all hover:scale-105 shadow-lg shadow-blue-600/30"
               >
-                <Zap size={15} /> Predict My Rank <ArrowRight size={14} />
+                <Zap size={18} /> Predict My Rank <ArrowRight size={18} />
               </Link>
             </div>
-          </div>
-
-          {/* Right Hero Badge Visual */}
-          <div className="md:col-span-4 hidden md:flex justify-center items-center animate-scale-in">
-            <div className="relative p-6 rounded-3xl bg-card border border-card-border shadow-xl w-64 text-center space-y-4">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 to-violet-500/5 -z-10" />
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-blue-500/30">
-                <Trophy size={24} />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-foreground text-sm">KEA Smart Predictor</h3>
-                <p className="text-xs text-muted-foreground mt-1">Empowered by data modeling</p>
-              </div>
-              <div className="py-2.5 px-3 bg-muted/60 rounded-2xl border border-border flex justify-around">
-                <div>
-                  <div className="text-sm font-black text-foreground">100%</div>
-                  <div className="text-[9px] text-muted-foreground font-semibold uppercase">Free Access</div>
-                </div>
-                <div className="w-px bg-border" />
-                <div>
-                  <div className="text-sm font-black text-foreground">3 Years</div>
-                  <div className="text-[9px] text-muted-foreground font-semibold uppercase">Cutoff Data</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

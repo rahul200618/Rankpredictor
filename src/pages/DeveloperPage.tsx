@@ -134,14 +134,17 @@ export default function DeveloperPage() {
         updated_at: new Date().toISOString()
       });
 
-      const { error } = await supabase.from("app_settings").upsert(updates, { onConflict: 'setting_key' });
+      const { error } = await supabase.rpc("secure_update_app_settings", {
+        p_updates: updates,
+        p_secret: "my_super_secret_developer_key_2026"
+      });
       
       if (error) throw error;
       
       toast({ title: "Settings Saved", description: "Developer configuration updated successfully." });
     } catch (err: any) {
       console.error("Error saving settings", err);
-      toast({ title: "Error", description: "Could not save settings.", variant: "destructive" });
+      toast({ title: "Error", description: err?.message || "Could not save settings.", variant: "destructive" });
     } finally {
       setSaving(false);
     }

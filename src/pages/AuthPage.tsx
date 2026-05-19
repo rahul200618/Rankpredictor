@@ -16,13 +16,16 @@ export default function AuthPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  
+
   // ── System States ────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [error, setError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
+
+  const { isSimulated } = useAuth();
 
   // Cooldown countdown
   const startCooldown = () => {
@@ -62,42 +65,35 @@ export default function AuthPage() {
     }
   };
 
-  // ── Action: Verify OTP ───────────────────────────────────────────────────
-  const handleVerifyOtp = async (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    const code = otp.join("");
-    if (code.length !== 6) { setError("Enter the 6-digit OTP code"); return; }
-    setError("");
-    setLoading(true);
-    try {
-      await verifyOtp(code);
-      setOtpVerified(true);
-      toast({
-        title: "✅ Phone Verified",
-        description: "Your mobile number has been successfully verified.",
-      });
-    } catch (err: any) {
-      setError("Invalid verification code. Please check and try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // ── Action: Save Profile & Complete Signup ───────────────────────────────
   const handleCompleteSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setError("Please enter your full name"); return; }
-    if (!otpVerified) { setError("Please verify your phone number using the OTP first"); return; }
+
+    const code = otp.join("");
+    if (code.length !== 6) { setError("Enter the 6-digit OTP code"); return; }
 
     setError("");
     setLoading(true);
     try {
-      // 1. Save display name in Firebase/Simulated session
+      // 1. Verify OTP first if not already verified
+      if (!otpVerified) {
+        try {
+          await verifyOtp(code);
+          setOtpVerified(true);
+        } catch (verifyErr) {
+          setError("Invalid verification code. Please check and try again.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Save display name in Firebase/Simulated session
       await updateDisplayName(name.trim());
 
       // Use AuthContext user to avoid Firebase import crashes in simulated mode
       const uid = (user && "uid" in user ? user.uid : undefined) || `sim-user-+91${phone}`;
-      
+
       try {
         // Fire and forget to avoid blocking login flow
         supabase.from("user_profiles").upsert({
@@ -125,11 +121,39 @@ export default function AuthPage() {
     }
   };
 
+  // ── Auto-verify when all 6 digits are entered ───────────────────────────
+  const autoVerifyOtp = async (otpArr: string[]) => {
+    const code = otpArr.join("");
+    if (code.length !== 6 || otpVerified || verifyingOtp) return;
+    setVerifyingOtp(true);
+    setError("");
+    try {
+      await verifyOtp(code);
+      setOtpVerified(true);
+    } catch (err: any) {
+      const msg = err.message ?? "Invalid code";
+      setError(
+        isSimulated
+          ? `Invalid code. In test mode, use: 123456`
+          : msg
+      );
+      // Clear the OTP boxes so user can re-enter
+      setOtp(["", "", "", "", "", ""]);
+      setTimeout(() => document.getElementById("otp-0")?.focus(), 50);
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   // ── OTP input helpers ────────────────────────────────────────────────────
   const handleOtpInput = (idx: number, val: string) => {
     const digit = val.replace(/\D/g, "").slice(-1);
     const next = [...otp]; next[idx] = digit; setOtp(next);
     if (digit && idx < 5) document.getElementById(`otp-${idx + 1}`)?.focus();
+    // Auto-verify when last digit is filled
+    if (digit && idx === 5) {
+      autoVerifyOtp([...otp.slice(0, 5), digit]);
+    }
   };
 
   const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent) => {
@@ -167,7 +191,7 @@ export default function AuthPage() {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20 mb-3">
               <Sparkles size={24} className="text-white" />
             </div>
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Create Your Account</h1>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Sign-in/Login</h1>
             <p className="text-sm text-muted-foreground mt-1">Join RankPrediction to unlock cutoff analysis and predictive tools</p>
           </div>
 
@@ -238,12 +262,22 @@ export default function AuthPage() {
                   <span className="text-xs font-bold text-foreground/70 uppercase tracking-wider">
                     Enter Verification Code
                   </span>
-                  {otpVerified && (
+                  {verifyingOtp ? (
+                    <span className="flex items-center gap-1 text-[11px] font-bold text-blue-500 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full">
+                      <Loader2 size={10} className="animate-spin" /> Verifying…
+                    </span>
+                  ) : otpVerified ? (
                     <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                       <Check size={10} strokeWidth={3} /> Verified
                     </span>
-                  )}
+                  ) : null}
                 </div>
+
+                {isSimulated && (
+                  <p className="text-[10px] text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5 font-semibold">
+                    🧪 Test mode — use code: <strong>123456</strong>
+                  </p>
+                )}
 
                 <div className="flex gap-2 justify-center" onPaste={handleOtpPaste}>
                   {otp.map((digit, i) => (
@@ -256,9 +290,11 @@ export default function AuthPage() {
                       value={digit}
                       onChange={e => handleOtpInput(i, e.target.value)}
                       onKeyDown={e => handleOtpKeyDown(i, e)}
-                      disabled={otpVerified}
+                      disabled={otpVerified || verifyingOtp}
                       className={`w-11 text-center text-lg font-black rounded-xl border transition-all bg-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-70 ${
-                        digit
+                        otpVerified
+                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-600"
+                          : digit
                           ? "border-primary bg-primary/5 text-primary scale-105"
                           : "border-border text-foreground"
                       }`}
@@ -266,24 +302,6 @@ export default function AuthPage() {
                     />
                   ))}
                 </div>
-
-                {!otpVerified && (
-                  <button
-                    type="button"
-                    onClick={handleVerifyOtp}
-                    disabled={loading || otp.join("").length !== 6}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-xs shadow-md hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    {loading ? (
-                      <Loader2 size={13} className="animate-spin" />
-                    ) : (
-                      <>
-                        <Lock size={12} />
-                        <span>Verify Mobile Code</span>
-                      </>
-                    )}
-                  </button>
-                )}
               </div>
             )}
 
@@ -297,14 +315,14 @@ export default function AuthPage() {
             {/* Complete Signup Button */}
             <button
               type="submit"
-              disabled={loading || !otpVerified || !name.trim()}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white rounded-xl font-black text-sm shadow-xl shadow-indigo-500/25 hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.01] active:scale-[0.99] pt-4"
+              disabled={loading || otp.join("").length !== 6 || !name.trim()}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white rounded-xl font-black text-sm shadow-xl shadow-indigo-500/25 hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.01] active:scale-[0.99] mt-6"
             >
-              {loading && otpVerified ? (
+              {loading ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
                 <>
-                  <span>Create Account & Log In</span>
+                  <span>Log In</span>
                   <ArrowRight size={14} />
                 </>
               )}

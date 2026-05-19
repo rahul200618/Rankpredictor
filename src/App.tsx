@@ -35,13 +35,13 @@ function AppRoutes() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/rank-predictor">
-        <ProtectedRoute><RankPredictor /></ProtectedRoute>
+        <RankPredictor />
       </Route>
       <Route path="/college-finder">
-        <ProtectedRoute><CollegeFinder /></ProtectedRoute>
+        <CollegeFinder />
       </Route>
       <Route path="/college/:collegeCode">
-        {(params) => <ProtectedRoute><CollegeDetail /></ProtectedRoute>}
+        {(params) => <CollegeDetail />}
       </Route>
       <Route path="/admin">
         <ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>

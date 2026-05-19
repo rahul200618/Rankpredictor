@@ -54,10 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [dynamicAdminPhones, setDynamicAdminPhones] = useState<string[]>([]);
 
   useEffect(() => {
+    // Initial fetch
     const fetchAdmins = async () => {
       try {
-        const { data, error } = await supabase.from("app_settings").select("*").eq("setting_key", "admin_phones").single();
-        if (data && data.setting_value) {
+        const { data } = await supabase.from("app_settings").select("*").eq("setting_key", "admin_phones").single();
+        if (data?.setting_value) {
           try {
             const parsed = typeof data.setting_value === 'string' ? JSON.parse(data.setting_value) : data.setting_value;
             if (Array.isArray(parsed)) setDynamicAdminPhones(parsed);
@@ -68,6 +69,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
     fetchAdmins();
+
+    // Realtime subscription — updates instantly when developer saves settings
+    const channel = supabase
+      .channel("app_settings_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_settings", filter: "setting_key=eq.admin_phones" },
+        (payload) => {
+          try {
+            const val = (payload.new as any)?.setting_value;
+            const parsed = typeof val === 'string' ? JSON.parse(val) : val;
+            if (Array.isArray(parsed)) setDynamicAdminPhones(parsed);
+          } catch(e) {}
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   // Determine if we should run in zero-configuration simulation mode
@@ -111,15 +130,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Real Firebase Setup
-    if ((window as any)._recaptchaVerifier) {
-      (window as any)._recaptchaVerifier.clear();
+    let verifier = (window as any)._recaptchaVerifier;
+    if (!verifier) {
+      verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+        callback: () => {},
+      });
+      (window as any)._recaptchaVerifier = verifier;
     }
-
-    const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-      size: "invisible",
-      callback: () => {},
-    });
-    (window as any)._recaptchaVerifier = verifier;
 
     confirmationResultRef = await signInWithPhoneNumber(auth, phone, verifier);
   };

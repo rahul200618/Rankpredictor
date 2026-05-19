@@ -96,7 +96,7 @@ function DockItem({
   );
 }
 
-function UserMenu() {
+function UserMenu({ upwards = false }: { upwards?: boolean }) {
   const { user, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
 
@@ -137,7 +137,7 @@ function UserMenu() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden">
+          <div className={`absolute right-0 ${upwards ? 'bottom-full mb-2' : 'top-full mt-2'} w-52 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden`}>
             {/* User info */}
             <div className="px-4 py-3 border-b border-border bg-muted/30">
               <p className="text-xs font-bold text-foreground truncate">{user.displayName ?? "User"}</p>
@@ -203,6 +203,19 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
       }
     };
     fetchSettings();
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_settings' },
+        () => fetchSettings()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -219,22 +232,14 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
       <header
         className={`shrink-0 flex items-center gap-3 px-5 py-3 transition-all duration-300 ${
           scrolled
-            ? "bg-gradient-to-r from-slate-700/95 to-slate-800/95 backdrop-blur-xl border-b border-slate-500/30 shadow-md shadow-slate-900/20 text-white"
-            : "bg-gradient-to-r from-slate-700 to-slate-800 text-white"
+            ? "bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border-b border-slate-700/30 shadow-md shadow-slate-900/20 text-slate-50"
+            : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700/30 text-slate-50"
         }`}
       >
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-8 h-8 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center shadow-lg shadow-black/10 shrink-0 transition-transform group-hover:scale-110">
-            <Zap size={14} className="text-white" />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-transparent animate-pulse" />
-          </div>
-          <div className="hidden sm:block">
-            <span className="font-extrabold text-base tracking-tight text-white leading-none flex items-center gap-1.5">
-              RankPrediction
-              <Sparkles size={11} className="text-amber-400" />
-            </span>
-            <div className="text-[10px] text-white/80 font-medium leading-none mt-0.5">Student Counseling Intelligence</div>
+        <Link href="/" className="flex items-center group">
+          <div className="relative h-9 shrink-0 transition-transform group-hover:scale-105 drop-shadow-md">
+            <img src="/my-new-logo.svg" alt="RankPrediction Logo" className="w-auto h-full object-contain" />
           </div>
         </Link>
 
@@ -334,7 +339,9 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
         </button>
 
         {/* User avatar / auth actions */}
-        <UserMenu />
+        <div className="hidden sm:block">
+          <UserMenu />
+        </div>
 
         {/* Mobile hamburger */}
         <button
@@ -467,28 +474,28 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
 
       {/* ── Mobile bottom nav ── */}
       <div
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2 border-t border-border"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center gap-6 px-4 py-3 border-t border-border/30"
         style={{
-          background: theme === "dark" ? "rgba(12,18,40,0.95)" : "rgba(255,255,255,0.95)",
-          backdropFilter: "blur(16px)",
+          background: "transparent",
+          backdropFilter: "blur(20px)",
         }}
       >
-        {navItems.slice(0, 5).map(({ path, label, icon: Icon, color, badge }) => {
+        {navItems.map(({ path, label, icon: Icon, color, badge }) => {
           const isActive = location === path;
           return (
             <Link
               key={path}
               href={path}
-              className="flex flex-col items-center gap-0.5 py-1 px-2 rounded-xl transition-all"
+              className="flex flex-col items-center gap-0.5 py-1 px-4 rounded-xl transition-all"
             >
               <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isActive ? "scale-110" : ""}`}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isActive ? "scale-110" : ""}`}
                 style={{
                   background: isActive ? color + "22" : "transparent",
                   border: isActive ? `1.5px solid ${color}60` : "1.5px solid transparent",
                 }}
               >
-                <Icon size={16} className={isActive ? "animate-bounce-subtle" : ""} style={{ color: isActive ? color : "hsl(var(--muted-foreground))" }} />
+                <Icon size={17} className={isActive ? "animate-bounce-subtle" : ""} style={{ color: isActive ? color : "hsl(var(--muted-foreground))" }} />
               </div>
               <span
                 className="text-[9px] font-bold leading-none"
@@ -499,15 +506,6 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
             </Link>
           );
         })}
-        <button
-          onClick={() => setMobileMenuOpen(true)}
-          className="flex flex-col items-center gap-0.5 py-1 px-2"
-        >
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-border">
-            <Menu size={14} className="text-muted-foreground" />
-          </div>
-          <span className="text-[9px] font-bold text-muted-foreground">More</span>
-        </button>
       </div>
 
       {/* ── Mobile full-screen menu ── */}
@@ -569,9 +567,12 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
                   </>
                 )}
               </div>
-              <button onClick={toggleTheme} className="p-2 rounded-xl border border-border hover:bg-accent">
-                {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
-              </button>
+              <div className="flex items-center gap-3">
+                <UserMenu upwards={true} />
+                <button onClick={toggleTheme} className="p-2 rounded-xl border border-border hover:bg-accent">
+                  {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
