@@ -8,6 +8,7 @@ import {
   ChevronDown, Sparkles, Menu, X, LogOut, Shield, TerminalSquare
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const navItems = [
   { path: "/", label: "Home", icon: LayoutDashboard, color: "#60a5fa", glow: "rgba(96,165,250,0.5)" },
@@ -160,6 +161,7 @@ function DesktopNavItem({
 function UserMenu({ upwards = false }: { upwards?: boolean }) {
   const { user, isAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   if (!user) {
     return (
@@ -230,7 +232,15 @@ function UserMenu({ upwards = false }: { upwards?: boolean }) {
                 </>
               )}
               <button
-                onClick={() => { setOpen(false); signOut(); }}
+                onClick={async () => { 
+                  setOpen(false); 
+                  await signOut(); 
+                  setLocation("/");
+                  toast({
+                    title: "Logged out successfully",
+                    description: "Have a great day ahead! Let us know if you need any more college help.",
+                  });
+                }}
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors"
               >
                 <LogOut size={13} /> Sign Out
