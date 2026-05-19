@@ -8,8 +8,87 @@ import { SEO } from "@/components/SEO";
 import {
   Download, AlertCircle, Zap, TrendingUp, Target,
   Atom, FlaskConical, Calculator, ToggleLeft, ToggleRight,
-  Save, Check, Clock, Trash2, ChevronDown, ChevronUp, Loader2
+  Save, Check, Clock, Trash2, ChevronDown, ChevronUp, Loader2,
+  Sparkles
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+
+// ─── Custom Canvas Confetti Blaster (Zero Dependency) ─────────────────────────────
+const triggerConfetti = () => {
+  const canvas = document.createElement("canvas");
+  canvas.style.position = "fixed";
+  canvas.style.top = "0";
+  canvas.style.left = "0";
+  canvas.style.width = "100vw";
+  canvas.style.height = "100vh";
+  canvas.style.pointerEvents = "none";
+  canvas.style.zIndex = "9999";
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ["#3b82f6", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", "#ef4444"];
+  const particles: Array<{
+    x: number;
+    y: number;
+    size: number;
+    color: string;
+    speedX: number;
+    speedY: number;
+    rotation: number;
+    rotationSpeed: number;
+  }> = [];
+
+  // Create 150 particles bursting from below
+  for (let i = 0; i < 150; i++) {
+    particles.push({
+      x: canvas.width / 2 + (Math.random() - 0.5) * 120,
+      y: canvas.height + 20,
+      size: Math.random() * 8 + 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speedX: (Math.random() - 0.5) * 16,
+      speedY: -Math.random() * 22 - 12,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 10
+    });
+  }
+
+  let animationFrameId: number;
+  const update = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let active = false;
+
+    particles.forEach(p => {
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.speedY += 0.45; // gravity
+      p.speedX *= 0.985; // air resistance
+      p.rotation += p.rotationSpeed;
+
+      if (p.y < canvas.height + 50) {
+        active = true;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+      }
+    });
+
+    if (active) {
+      animationFrameId = requestAnimationFrame(update);
+    } else {
+      document.body.removeChild(canvas);
+    }
+  };
+
+  update();
+};
 
 interface SavedEntry {
   id: number;
@@ -163,6 +242,29 @@ export default function RankPredictor() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const [calculated, setCalculated] = useState(false);
+
+  const handlePredictClick = () => {
+    const hasKcet = subjectMode ? (phyKcet !== "" || chemKcet !== "" || mathKcet !== "") : simpleKcet !== "";
+    const hasBoard = subjectMode ? (phyBoard !== "" || chemBoard !== "" || mathBoard !== "") : simplePuc !== "";
+
+    if (!hasKcet && !hasBoard) {
+      toast({
+        title: "No Marks Entered",
+        description: "Please enter your KCET or Board marks first to calculate!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setCalculated(true);
+    triggerConfetti();
+    
+    // Smooth scroll to the result card on mobile
+    if (window.innerWidth < 1024 && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
 
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [savedEntries, setSavedEntries] = useState<SavedEntry[]>([]);
@@ -389,59 +491,76 @@ export default function RankPredictor() {
             </div>
           {/* Subject Mode only */}
 
-          {/* KEA Score Formula */}
-          <div className="flex items-start gap-3 p-3.5 bg-gradient-to-r from-primary/5 to-violet-500/5 rounded-xl border border-primary/15">
-            <Zap size={13} className="text-primary shrink-0 mt-0.5" />
-            <div>
-              <div className="text-xs font-semibold text-foreground mb-0.5">KEA Score Formula</div>
-              <code className="text-xs text-muted-foreground font-mono">KEA = (Total ÷ 1.8) × 0.5 + (PCM avg%) × 0.5</code>
-              {subjectMode && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  KCET <strong className="text-foreground">{kcetTotal}/180</strong> · Board avg <strong className="text-foreground">{pucPct.toFixed(1)}%</strong>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Predict button at the bottom of the left column */}
+          <button
+            onClick={handlePredictClick}
+            className="w-full flex items-center justify-center gap-2.5 px-6 py-4 bg-gradient-to-r from-primary via-indigo-600 to-violet-600 hover:from-primary/95 hover:to-violet-600/95 text-white font-extrabold rounded-2xl text-sm shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.01]"
+          >
+            <Zap size={16} className="animate-pulse" />
+            {calculated ? "Recalculate My Rank 🚀" : "Predict My Rank 🚀"}
+          </button>
         </div>
 
         {/* ── RIGHT SIDE (Predicted Rank - Sticky Sidebar) ── */}
         <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-5 animate-slide-up delay-100">
           
-          {/* Prediction Result Card */}
-          <div ref={cardRef} className="relative overflow-hidden bg-card border-2 border-primary/25 rounded-2xl p-6 space-y-5 shadow-lg shadow-primary/10">
-            <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-primary/8 blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">RankPrediction</div>
-                <div className="text-xs text-muted-foreground">{examMode} Rank Prediction</div>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: confidenceConfig.dot }} />
-                  <span className={`text-xs font-bold ${confidenceConfig.color}`}>{confidence}</span>
+          {!calculated ? (
+            /* Beautiful Premium Placeholder Card */
+            <div className="relative overflow-hidden bg-card border border-border rounded-2xl p-8 space-y-6 shadow-lg text-center flex flex-col items-center justify-center min-h-[350px]">
+              <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
+              <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center shadow-inner shadow-primary/20">
+                <Sparkles size={28} className="animate-bounce" />
+              </div>
+              <div className="space-y-2 max-w-xs">
+                <h3 className="text-lg font-black text-foreground">Awaiting Your Marks</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Enter your subject-wise or overall KCET and Board scores on the left, then click <strong>Predict My Rank</strong> to reveal your detailed forecast!
+                </p>
+              </div>
+              <button 
+                onClick={handlePredictClick}
+                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-primary to-violet-600 text-white rounded-xl text-xs font-extrabold hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/30"
+              >
+                <Zap size={14} className="animate-pulse" /> Predict Rank Now 🚀
+              </button>
+            </div>
+          ) : (
+            /* Prediction Result Card */
+            <>
+              <div ref={cardRef} className="relative overflow-hidden bg-card border-2 border-primary/25 rounded-2xl p-6 space-y-5 shadow-lg shadow-primary/10">
+                <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-primary/8 blur-2xl pointer-events-none" />
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">RankPrediction</div>
+                    <div className="text-xs text-muted-foreground">{examMode} Rank Prediction</div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ background: confidenceConfig.dot }} />
+                      <span className={`text-xs font-bold ${confidenceConfig.color}`}>{confidence}</span>
+                    </div>
+                  </div>
+                  <RankGauge score={keaScore} />
+                </div>
+                <div className={`text-center py-5 rounded-xl bg-gradient-to-b from-primary/8 to-violet-500/5 border border-primary/15 transition-all duration-500 ${revealed ? "opacity-100" : "opacity-0"}`}>
+                  <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center justify-center gap-1.5">
+                    <TrendingUp size={11} /> Predicted Rank Range
+                  </div>
+                  <div className="text-4xl md:text-5xl font-black tabular-nums gradient-text">
+                    {rankLow.toLocaleString("en-IN")} – {rankHigh.toLocaleString("en-IN")}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">Based on 2023–2025 {examMode} data</div>
                 </div>
               </div>
-              <RankGauge score={keaScore} />
-            </div>
-            <div className={`text-center py-5 rounded-xl bg-gradient-to-b from-primary/8 to-violet-500/5 border border-primary/15 transition-all duration-500 ${revealed ? "opacity-100" : "opacity-0"}`}>
-              <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center justify-center gap-1.5">
-                <TrendingUp size={11} /> Predicted Rank Range
+
+              {/* Action Buttons */}
+              <div className="flex gap-2.5 flex-col sm:flex-row lg:flex-col">
+                <button onClick={() => setLocation(`/college-finder?rank=${rank}&category=GM&branch=CS`)}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-primary to-violet-600 text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/30">
+                  <Target size={14} />
+                  Predict Eligible Colleges 🎯
+                </button>
               </div>
-              <div className="text-4xl md:text-5xl font-black tabular-nums gradient-text">
-                {rankLow.toLocaleString("en-IN")} – {rankHigh.toLocaleString("en-IN")}
-              </div>
-              <div className="text-xs text-muted-foreground mt-2">Based on 2023–2025 {examMode} data</div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2.5 flex-col sm:flex-row lg:flex-col">
-
-
-            <button onClick={() => setLocation(`/college-finder?rank=${rank}&category=GM&branch=CS`)}
-              className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-primary to-violet-600 text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/30">
-              <Target size={14} />
-              Predict Eligible Colleges 🎯
-            </button>
-          </div>
+            </>
+          )}
 
 
 
