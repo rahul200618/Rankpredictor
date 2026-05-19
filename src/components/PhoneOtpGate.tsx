@@ -98,8 +98,12 @@ export function PhoneOtpGate({ onVerified }: PhoneOtpGateProps) {
         <div className="h-2 bg-gradient-to-r from-emerald-400 via-teal-500 to-blue-500" />
         
         <CardHeader className="text-center pt-8 pb-4">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4">
-            <GraduationCap className="h-6 w-6 text-white" />
+          <div className="mx-auto h-16 mb-4 w-48 relative overflow-visible">
+            <img 
+              src="/Ranktransparent.png" 
+              alt="RankPrediction Logo" 
+              className="w-full h-full object-contain scale-[1.5] origin-center drop-shadow-[0_4px_12px_rgba(52,211,153,0.3)] dark:invert-0 invert transition-all"
+            />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent dark:from-emerald-400 dark:to-blue-400">
             Verify Your Profile

@@ -10,8 +10,6 @@ import {
   Atom, FlaskConical, Calculator, ToggleLeft, ToggleRight,
   Save, Check, Clock, Trash2, ChevronDown, ChevronUp, Loader2
 } from "lucide-react";
-import { PhoneOtpGate } from "@/components/PhoneOtpGate";
-import { LeadService } from "@/lib/lead-service";
 
 interface SavedEntry {
   id: number;
@@ -32,8 +30,8 @@ interface SavedEntry {
 }
 
 function NumInput({ label, value, max, onChange, icon: Icon, color, sublabel }: {
-  label: string; value: number; max: number;
-  onChange: (v: number) => void; icon: React.ElementType;
+  label: string; value: number | ""; max: number;
+  onChange: (v: number | "") => void; icon: React.ElementType;
   color: string; sublabel?: string;
 }) {
   return (
@@ -48,7 +46,11 @@ function NumInput({ label, value, max, onChange, icon: Icon, color, sublabel }: 
       <div className="relative">
         <input
           type="number" min={0} max={max} value={value}
-          onChange={e => { const v = Math.max(0, Math.min(max, Number(e.target.value))); onChange(isNaN(v) ? 0 : v); }}
+          onChange={e => { 
+            if (e.target.value === "") { onChange(""); return; }
+            const v = Math.max(0, Math.min(max, Number(e.target.value))); 
+            onChange(isNaN(v) ? "" : v); 
+          }}
           className="w-full px-3 py-2.5 pr-12 text-lg font-extrabold tabular-nums text-center rounded-xl border-2 focus:outline-none transition-all duration-200 bg-background"
           style={{ borderColor: color + "40", color }}
           onFocus={e => (e.target.style.borderColor = color + "90")}
@@ -58,7 +60,7 @@ function NumInput({ label, value, max, onChange, icon: Icon, color, sublabel }: 
       </div>
       <div className="h-1 bg-muted rounded-full mt-2 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-300"
-          style={{ width: `${(value / max) * 100}%`, background: `linear-gradient(90deg, ${color}99, ${color})` }} />
+          style={{ width: `${((Number(value) || 0) / max) * 100}%`, background: `linear-gradient(90deg, ${color}99, ${color})` }} />
       </div>
     </div>
   );
@@ -146,24 +148,16 @@ export default function RankPredictor() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  const [verified, setVerified] = useState(LeadService.isLoggedIn() || !!user);
+  const [phyKcet, setPhyKcet] = useState<number | "">("");
+  const [chemKcet, setChemKcet] = useState<number | "">("");
+  const [mathKcet, setMathKcet] = useState<number | "">("");
 
-  useEffect(() => {
-    if (user) {
-      setVerified(true);
-    }
-  }, [user]);
+  const [phyBoard, setPhyBoard] = useState<number | "">("");
+  const [chemBoard, setChemBoard] = useState<number | "">("");
+  const [mathBoard, setMathBoard] = useState<number | "">("");
 
-  const [phyKcet, setPhyKcet] = useState(40);
-  const [chemKcet, setChemKcet] = useState(40);
-  const [mathKcet, setMathKcet] = useState(40);
-
-  const [phyBoard, setPhyBoard] = useState(85);
-  const [chemBoard, setChemBoard] = useState(85);
-  const [mathBoard, setMathBoard] = useState(85);
-
-  const [simpleKcet, setSimpleKcet] = useState(120);
-  const [simplePuc, setSimplePuc] = useState(85);
+  const [simpleKcet, setSimpleKcet] = useState<number | "">("");
+  const [simplePuc, setSimplePuc] = useState<number | "">("");
   const [subjectMode, setSubjectMode] = useState(true);
 
   const cardRef = useRef<HTMLDivElement>(null);
@@ -175,8 +169,8 @@ export default function RankPredictor() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
-  const kcetTotal = subjectMode ? phyKcet + chemKcet + mathKcet : simpleKcet;
-  const pucPct = subjectMode ? (phyBoard + chemBoard + mathBoard) / 3 : simplePuc;
+  const kcetTotal = subjectMode ? (Number(phyKcet)||0) + (Number(chemKcet)||0) + (Number(mathKcet)||0) : (Number(simpleKcet)||0);
+  const pucPct = subjectMode ? ((Number(phyBoard)||0) + (Number(chemBoard)||0) + (Number(mathBoard)||0)) / 3 : (Number(simplePuc)||0);
   const prediction = predictRank(kcetTotal, pucPct);
 
   const keaScore = prediction.composite;
@@ -314,28 +308,6 @@ export default function RankPredictor() {
     finally { setDownloading(false); }
   };
 
-  if (!verified) {
-    return (
-      <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
-        <SEO 
-          title={`${examMode} Rank Predictor & Marks vs Rank 2025/2026`}
-          description={`Predict your ${examMode} 2025 & 2026 expected ranks instantly. Highly calibrated ${examMode} Marks vs Rank calculator based on the official KEA scoring model.`}
-          keywords={`${examMode.toLowerCase()} rank predictor, ${examMode.toLowerCase()} marks vs rank, ${examMode.toLowerCase()} 2026 rank predictor, ${examMode.toLowerCase()} 2025 marks vs rank, comedk rank predictor, comedk marks vs rank, kea rank calculator`}
-        />
-        <div className="animate-slide-up flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/30 shrink-0">
-            <Target size={17} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold text-foreground">Rank Predictor</h1>
-            <p className="text-xs text-muted-foreground">{examMode} 2026 — Live KEA Score Calculator & Analytics</p>
-          </div>
-        </div>
-        <PhoneOtpGate onVerified={() => { setVerified(true); loadHistory(); }} />
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       <SEO 
@@ -371,7 +343,7 @@ export default function RankPredictor() {
                     <div className="text-xs text-muted-foreground">Max 60 per subject</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-black gradient-text tabular-nums">{phyKcet + chemKcet + mathKcet}</div>
+                    <div className="text-2xl font-black gradient-text tabular-nums">{kcetTotal}</div>
                     <div className="text-xs text-muted-foreground">/ 180 total</div>
                   </div>
                 </div>
@@ -381,9 +353,9 @@ export default function RankPredictor() {
                   <NumInput label="Maths" value={mathKcet} max={60} onChange={setMathKcet} icon={Calculator} color="#a78bfa" sublabel="Math" />
                 </div>
                 <div className="mt-4 h-3 rounded-full overflow-hidden flex gap-0.5">
-                  <div className="h-full rounded-l-full transition-all duration-300" style={{ width: `${(phyKcet / 180) * 100}%`, background: "#60a5fa" }} />
-                  <div className="h-full transition-all duration-300" style={{ width: `${(chemKcet / 180) * 100}%`, background: "#34d399" }} />
-                  <div className="h-full transition-all duration-300" style={{ width: `${(mathKcet / 180) * 100}%`, background: "#a78bfa" }} />
+                  <div className="h-full rounded-l-full transition-all duration-300" style={{ width: `${((Number(phyKcet)||0) / 180) * 100}%`, background: "#60a5fa" }} />
+                  <div className="h-full transition-all duration-300" style={{ width: `${((Number(chemKcet)||0) / 180) * 100}%`, background: "#34d399" }} />
+                  <div className="h-full transition-all duration-300" style={{ width: `${((Number(mathKcet)||0) / 180) * 100}%`, background: "#a78bfa" }} />
                   <div className="flex-1 h-full bg-muted rounded-r-full" />
                 </div>
                 <div className="flex gap-4 mt-1.5">
@@ -404,7 +376,7 @@ export default function RankPredictor() {
                     <div className="text-xs text-muted-foreground">Enter marks out of 100 per subject</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-black gradient-text tabular-nums">{((phyBoard + chemBoard + mathBoard) / 3).toFixed(1)}%</div>
+                    <div className="text-2xl font-black gradient-text tabular-nums">{pucPct.toFixed(1)}%</div>
                     <div className="text-xs text-muted-foreground">PCM average</div>
                   </div>
                 </div>
@@ -462,6 +434,8 @@ export default function RankPredictor() {
 
           {/* Action Buttons */}
           <div className="flex gap-2.5 flex-col sm:flex-row lg:flex-col">
+
+
             <button onClick={() => setLocation(`/college-finder?rank=${rank}&category=GM&branch=CS`)}
               className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-primary to-violet-600 text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/30">
               <Target size={14} />

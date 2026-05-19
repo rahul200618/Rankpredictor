@@ -1,9 +1,6 @@
 import { SEO } from "@/components/SEO"
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAuth } from "@/contexts/AuthContext"
-import { PhoneOtpGate } from "@/components/PhoneOtpGate"
-import { LeadService } from "@/lib/lead-service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -153,15 +150,6 @@ const Sparkline = ({ data }: { data: number[] }) => {
   )
 }
 const CollegeFinder = () => {
-  const { user } = useAuth()
-  const [verified, setVerified] = useState(LeadService.isLoggedIn() || !!user)
-
-  useEffect(() => {
-    if (user) {
-      setVerified(true)
-    }
-  }, [user])
-
   const [cutoffs, setCutoffs] = useState<CutoffData[]>([])
   const [matches, setMatches] = useState<CollegeMatch[]>([])
   const [loading, setLoading] = useState(true)
@@ -1360,34 +1348,6 @@ const CollegeFinder = () => {
     const yearsCovered = metadata?.years_covered ?? Array.from(new Set(cutoffs.map(c => c.year))).sort((a, b) => b.localeCompare(a))
     return { totalEntries, totalInstitutes, totalCourses, totalCategories, yearsCovered }
   })()
-
-  if (!verified) {
-    return (
-      <div className="min-h-screen bg-background relative overflow-hidden pb-20 md:pb-0">
-        <SEO
-          title="College Finder"
-          description="Find the perfect engineering college based on your KCET rank, category, and preferences with smart filtering."
-          url="https://rankprediction.com/college-finder"
-          keywords="KCET college finder, find colleges by rank, KCET 2026 colleges, best engineering colleges for my rank, KCET rank wise college list"
-        />
-        <div className="container mx-auto px-4 py-8 space-y-6 max-w-7xl">
-          <div className="space-y-4 text-center sm:text-left mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-700/10 border border-slate-700/20 text-slate-700 dark:text-slate-400 text-xs font-medium">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Official KCET 2024-25 Data</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-700 via-emerald-400 to-violet-400">
-              College Finder
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Filter through verified cutoff positions from previous years to find your perfect engineering college.
-            </p>
-          </div>
-          <PhoneOtpGate onVerified={() => setVerified(true)} />
-        </div>
-      </div>
-    )
-  }
 
   if (loading) {
     return (

@@ -165,7 +165,7 @@ function UserMenu({ upwards = false }: { upwards?: boolean }) {
     return (
       <Link
         href="/auth"
-        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all hover:scale-105 shadow-md shadow-primary/20"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all hover:scale-105 shadow-md shadow-primary/20"
       >
         <Sparkles size={12} /> Sign In
       </Link>

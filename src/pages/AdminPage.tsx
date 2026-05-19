@@ -30,7 +30,7 @@ export default function AdminPage() {
       try {
         const [enqRes, usersRes] = await Promise.all([
           supabase.from("counseling_enquiries").select("*").order("created_at", { ascending: false }),
-          supabase.from("user_profiles").select("*").order("created_at", { ascending: false })
+          supabase.from("user_profiles").select("*")
         ]);
 
         if (enqRes.error) throw enqRes.error;
@@ -147,7 +147,11 @@ export default function AdminPage() {
                     </div>
                     <div className="text-[10px] text-muted-foreground text-right">
                       <div>Joined</div>
-                      <div>{new Date(u.created_at || u.last_seen_at).toLocaleDateString()}</div>
+                      <div>
+                        {u.created_at || u.last_seen_at 
+                          ? new Date(u.created_at || u.last_seen_at).toLocaleDateString()
+                          : "Recently"}
+                      </div>
                     </div>
                   </div>
                 ))

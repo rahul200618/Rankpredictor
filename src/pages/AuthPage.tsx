@@ -104,9 +104,7 @@ export default function AuthPage() {
         supabase.from("user_profiles").upsert({
           id: uid,
           phone: `+91${phone}`,
-          full_name: name.trim(),
-          streams: [], // default to empty array
-          last_seen_at: new Date().toISOString()
+          full_name: name.trim()
         }).then(({ error }) => {
           if (error) console.warn("Failed to write to Supabase: ", error);
         });
@@ -193,10 +191,14 @@ export default function AuthPage() {
 
           {/* ── Card Header ── */}
           <div className="px-8 pt-8 pb-4 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20 mb-3">
-              <Sparkles size={24} className="text-white" />
+            <div className="inline-flex items-center justify-center h-16 mb-4 w-48 relative overflow-visible">
+              <img
+                src="/Ranktransparent.png"
+                alt="RankPrediction Logo"
+                className="w-full h-full object-contain scale-[1.5] origin-center drop-shadow-[0_4px_12px_rgba(99,102,241,0.3)] dark:invert-0 invert transition-all"
+              />
             </div>
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Sign-in/Login</h1>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight"></h1>
             <p className="text-sm text-muted-foreground mt-1">Join RankPrediction to unlock cutoff analysis and predictive tools</p>
           </div>
 
@@ -296,13 +298,12 @@ export default function AuthPage() {
                       onChange={e => handleOtpInput(i, e.target.value)}
                       onKeyDown={e => handleOtpKeyDown(i, e)}
                       disabled={otpVerified || verifyingOtp}
-                      className={`w-11 text-center text-lg font-black rounded-xl border transition-all bg-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-70 ${
-                        otpVerified
+                      className={`w-11 text-center text-lg font-black rounded-xl border transition-all bg-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-70 ${otpVerified
                           ? "border-emerald-500 bg-emerald-500/10 text-emerald-600"
                           : digit
-                          ? "border-primary bg-primary/5 text-primary scale-105"
-                          : "border-border text-foreground"
-                      }`}
+                            ? "border-primary bg-primary/5 text-primary scale-105"
+                            : "border-border text-foreground"
+                        }`}
                       style={{ height: "3.25rem" }}
                     />
                   ))}
