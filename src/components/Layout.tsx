@@ -316,16 +316,16 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
         href="https://wa.me/919620012369?text=Hello!%20I%20want%20free%20counseling%20for%20counseling%20help."
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white font-extrabold px-3 py-4 rounded-l-2xl shadow-2xl flex flex-col items-center gap-3 transition-all duration-300 hover:-translate-x-1 border-l border-t border-b border-white/20 select-none group"
+         className="fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white font-extrabold px-1.5 py-2.5 sm:px-3 sm:py-4 rounded-l-lg sm:rounded-l-2xl shadow-2xl flex flex-col items-center gap-1.5 sm:gap-3 transition-all duration-300 hover:-translate-x-1 border-l border-t border-b border-white/20 select-none group"
       >
         <svg 
-          className="w-5 h-5 fill-current animate-bounce" 
+           className="w-3 h-3.5 sm:w-4 sm:h-5 fill-current animate-bounce" 
           viewBox="0 0 24 24"
         >
           <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.66.986 3.292 1.48 4.743 1.481 5.378 0 9.753-4.375 9.756-9.759.002-2.607-1.013-5.059-2.859-6.905C16.398 2.126 13.95 1.11 11.343 1.111c-5.385 0-9.76 4.375-9.764 9.759-.001 1.702.46 3.36 1.332 4.795l-.997 3.641 3.734-.98c1.393.759 2.87 1.168 4.419 1.168zm10.155-6.818c-.28-.14-1.654-.816-1.91-.908-.256-.092-.443-.139-.629.14-.186.278-.718.908-.88 1.093-.163.186-.326.21-.605.07-.28-.14-1.18-.435-2.247-1.387-.83-.74-1.39-1.653-1.552-1.933-.163-.28-.017-.43.123-.569.126-.125.28-.326.42-.489.14-.163.186-.279.28-.465.093-.186.046-.349-.023-.489-.069-.14-.629-1.517-.861-2.074-.227-.547-.456-.473-.629-.482-.163-.008-.349-.01-.535-.01-.186 0-.489.07-.745.349-.256.279-.977.954-.977 2.325s1.001 2.699 1.14 2.885c.14.186 1.97 3.007 4.773 4.213.667.287 1.187.459 1.592.587.67.213 1.28.183 1.763.111.539-.08 1.654-.676 1.887-1.328.232-.653.232-1.213.163-1.328-.07-.113-.256-.184-.536-.324z"/>
         </svg>
-        <span className="[writing-mode:vertical-lr] text-[10px] sm:text-[11px] font-black uppercase tracking-wider whitespace-nowrap">
-          Click here for free counselling
+          <span className="[writing-mode:vertical-lr] text-[8px] sm:text-[11px] font-black uppercase tracking-wider whitespace-nowrap leading-none">
+           Click here for free counselling
         </span>
       </a>
 

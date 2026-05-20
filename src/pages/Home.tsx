@@ -226,11 +226,11 @@ export default function Home() {
             <div className="animate-slide-up flex flex-col items-center space-y-1.5">
               <img 
                 src="/vidyarthi-sewa-logo.png" 
-                alt="Vidyarthi Seva Trust Logo" 
+                alt="Vidyarthi Sewa Trust Logo" 
                 className="h-16 sm:h-20 md:h-24 object-contain hover:scale-105 transition-transform duration-300 pointer-events-auto"
               />
               <span className="text-xs sm:text-sm md:text-base font-extrabold tracking-widest text-blue-600 dark:text-blue-400 uppercase">
-                Brought to you by Vidyarthi Seva Trust
+                Brought to you by Vidyarthi Sewa Trust
               </span>
             </div>
 

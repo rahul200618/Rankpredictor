@@ -52,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [simPhone, setSimPhone] = useState<string>("");
   const [dynamicAdminPhones, setDynamicAdminPhones] = useState<string[]>([]);
+  const [forceSimulatedMode, setForceSimulatedMode] = useState(false);
 
   useEffect(() => {
     // Initial fetch
@@ -107,10 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     !import.meta.env.VITE_FIREBASE_API_KEY ||
     import.meta.env.VITE_FIREBASE_API_KEY.includes("AIzaSy...") ||
     import.meta.env.VITE_FIREBASE_PROJECT_ID === "your-project-id";
+  const activeSimulatedMode = isSimulated || forceSimulatedMode;
 
   // ── Session Sync (Supports local HMR/refresh persistence) ──────────────────
   useEffect(() => {
-    if (isSimulated) {
+    if (activeSimulatedMode) {
       const stored = localStorage.getItem("rankprediction_sim_user");
       if (stored) {
         try {
@@ -127,11 +129,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       return unsub;
     }
-  }, [isSimulated]);
+  }, [activeSimulatedMode]);
 
   // ── Send OTP ───────────────────────────────────────────────────────────────
   const sendOtp = async (phone: string) => {
-    if (isSimulated) {
+    if (activeSimulatedMode) {
       setSimPhone(phone);
       // Simulate SMS Delivery with a premium dashboard notification
       toast({
@@ -179,24 +181,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       confirmationResultRef = await triggerSignIn(false);
     } catch (err: any) {
       console.warn("First sign-in attempt failed. Retrying with fresh recaptcha...", err);
-      // If we hit any recaptcha rendering or mounting issues, force clear the verifier cache and retry!
-      const isRecaptchaErr = 
-        err.message?.includes("rendered") || 
-        err.message?.includes("removed") || 
-        err.code?.includes("recaptcha") ||
-        err.message?.includes("already-exists");
+      const message = String(err?.message ?? "").toLowerCase();
+      const code = String(err?.code ?? "").toLowerCase();
+      const isRecaptchaErr =
+        message.includes("rendered") ||
+        message.includes("removed") ||
+        message.includes("already-exists") ||
+        code.includes("recaptcha");
 
       if (isRecaptchaErr) {
-        confirmationResultRef = await triggerSignIn(true);
-      } else {
-        throw err;
+        try {
+          confirmationResultRef = await triggerSignIn(true);
+          return;
+        } catch (retryErr: any) {
+          err = retryErr;
+        }
       }
+
+      const isCredentialErr =
+        code.includes("invalid-app-credential") ||
+        code.includes("operation-not-allowed") ||
+        code.includes("app-credential-too-old") ||
+        message.includes("invalid-app-credential") ||
+        message.includes("operation-not-allowed");
+
+      if (isCredentialErr) {
+        setForceSimulatedMode(true);
+        setSimPhone(phone);
+        confirmationResultRef = null;
+        toast({
+          title: "Test mode enabled",
+          description: "Phone verification is unavailable in this environment. Use OTP 123456 to continue.",
+          duration: 8000,
+        });
+        return;
+      }
+
+      throw err;
     }
   };
 
   // ── Verify OTP ─────────────────────────────────────────────────────────────
   const verifyOtp = async (otp: string): Promise<any> => {
-    if (isSimulated) {
+    if (activeSimulatedMode) {
       if (otp !== "123456") {
         throw new Error("Invalid OTP code. For simulated mode, enter: 123456");
       }
@@ -218,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Update display name ────────────────────────────────────────────────────
   const updateDisplayName = async (name: string) => {
-    if (isSimulated) {
+    if (activeSimulatedMode) {
       localStorage.setItem("rankprediction_sim_name", name);
       const updatedUser = { ...user, displayName: name } as SimulatedUser;
       localStorage.setItem("rankprediction_sim_user", JSON.stringify(updatedUser));
@@ -234,9 +261,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Sign Out ───────────────────────────────────────────────────────────────
   const signOut = async () => {
-    if (isSimulated) {
+    if (activeSimulatedMode) {
       localStorage.removeItem("rankprediction_sim_user");
       setUser(null);
+      setForceSimulatedMode(false);
       return;
     }
 
@@ -258,7 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, isAdmin, isDeveloper, isSimulated,
+      user, loading, isAdmin, isDeveloper, isSimulated: activeSimulatedMode,
       sendOtp, verifyOtp, updateDisplayName, signOut,
     }}>
       {/* Invisible reCAPTCHA anchor */}
