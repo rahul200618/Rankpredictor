@@ -437,6 +437,25 @@ export default function RankPredictor() {
           
           {/* Subject-Wise Marks Cards */}
           <div className="space-y-4">
+              {/* Board Marks */}
+              <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="text-sm font-extrabold text-foreground">Board (PUC / 12th) Marks</div>
+                    <div className="text-xs text-muted-foreground">Enter marks out of 100 per subject</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-black gradient-text tabular-nums">{pucPct.toFixed(1)}%</div>
+                    <div className="text-xs text-muted-foreground">PCM average</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <NumInput label="Physics" value={phyBoard} max={100} onChange={setPhyBoard} icon={Atom} color="#f472b6" sublabel="Phy" />
+                  <NumInput label="Chemistry" value={chemBoard} max={100} onChange={setChemBoard} icon={FlaskConical} color="#fb923c" sublabel="Chem" />
+                  <NumInput label="Maths" value={mathBoard} max={100} onChange={setMathBoard} icon={Calculator} color="#facc15" sublabel="Math" />
+                </div>
+              </div>
+
               {/* KCET Marks */}
               <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
@@ -467,25 +486,6 @@ export default function RankPredictor() {
                       <span className="text-[10px] text-muted-foreground">{l}: <strong style={{ color: c as string }}>{v}</strong></span>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              {/* Board Marks */}
-              <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-sm font-extrabold text-foreground">Board (PUC / 12th) Marks</div>
-                    <div className="text-xs text-muted-foreground">Enter marks out of 100 per subject</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-black gradient-text tabular-nums">{pucPct.toFixed(1)}%</div>
-                    <div className="text-xs text-muted-foreground">PCM average</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <NumInput label="Physics" value={phyBoard} max={100} onChange={setPhyBoard} icon={Atom} color="#f472b6" sublabel="Phy" />
-                  <NumInput label="Chemistry" value={chemBoard} max={100} onChange={setChemBoard} icon={FlaskConical} color="#fb923c" sublabel="Chem" />
-                  <NumInput label="Maths" value={mathBoard} max={100} onChange={setMathBoard} icon={Calculator} color="#facc15" sublabel="Math" />
                 </div>
               </div>
             </div>

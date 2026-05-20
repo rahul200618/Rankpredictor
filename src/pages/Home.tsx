@@ -220,7 +220,19 @@ export default function Home() {
 
       {/* ── HERO HEADER SECTION ── */}
       <section className="relative max-w-4xl mx-auto px-5 pt-16 pb-4 text-center">
-        <div className="flex flex-col items-center space-y-8">
+        <div className="flex flex-col items-center space-y-3">
+
+            {/* Large Trust logo and subtitle */}
+            <div className="animate-slide-up flex flex-col items-center space-y-1.5">
+              <img 
+                src="/vidyarthi-sewa-logo.png" 
+                alt="Vidyarthi Seva Trust Logo" 
+                className="h-16 sm:h-20 md:h-24 object-contain hover:scale-105 transition-transform duration-300 pointer-events-auto"
+              />
+              <span className="text-xs sm:text-sm md:text-base font-extrabold tracking-widest text-blue-600 dark:text-blue-400 uppercase">
+                Brought to you by Vidyarthi Seva Trust
+              </span>
+            </div>
 
             {/* Headline */}
             <h1 className="animate-slide-up text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
