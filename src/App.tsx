@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ExamModeProvider } from "@/contexts/ExamModeContext";
+import { ExamModeProvider, useExamMode } from "@/contexts/ExamModeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -12,6 +12,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 // Premium Lazy-loaded Pages
 const Home = lazy(() => import("@/pages/Home"));
 const RankPredictor = lazy(() => import("@/pages/RankPredictor"));
+const ComedkRankPredictor = lazy(() => import("@/pages/ComedkRankPredictor"));
 const CollegeFinder = lazy(() => import("@/pages/CollegeFinder"));
 const CollegeDetail = lazy(() => import("@/pages/CollegeDetail"));
 const AuthPage = lazy(() => import("@/pages/AuthPage"));
@@ -34,6 +35,7 @@ const queryClient = new QueryClient();
 function AppRoutes() {
   const [location] = useLocation();
   const isAuthPage = location === "/auth";
+  const { examMode } = useExamMode();
 
   if (isAuthPage) {
     return (
@@ -47,8 +49,11 @@ function AppRoutes() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/rank-predictor">
-        <ProtectedRoute><RankPredictor /></ProtectedRoute>
+        <ProtectedRoute>
+          {examMode === "COMEDK" ? <ComedkRankPredictor /> : <RankPredictor />}
+        </ProtectedRoute>
       </Route>
+
       <Route path="/college-finder">
         <ProtectedRoute><CollegeFinder /></ProtectedRoute>
       </Route>

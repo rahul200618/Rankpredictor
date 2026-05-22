@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { AdBanner } from "@/components/AdBanner";
 
 const navItems = [
   { path: "/", label: "Home", icon: LayoutDashboard, color: "#60a5fa", glow: "rgba(96,165,250,0.5)" },
@@ -41,9 +42,8 @@ function DockItem({
     >
       {/* Label tooltip above */}
       <div
-        className={`absolute -top-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-xs font-bold text-white whitespace-nowrap pointer-events-none transition-all duration-200 ${
-          hovered ? "opacity-100 -translate-y-0" : "opacity-0 translate-y-1"
-        }`}
+        className={`absolute -top-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-xs font-bold text-white whitespace-nowrap pointer-events-none transition-all duration-200 ${hovered ? "opacity-100 -translate-y-0" : "opacity-0 translate-y-1"
+          }`}
         style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
       >
         {label}
@@ -52,25 +52,24 @@ function DockItem({
 
       {/* Icon container */}
       <div
-        className={`relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-          isActive
+        className={`relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive
             ? "scale-110"
             : hovered
-            ? "scale-125 -translate-y-2"
-            : "scale-100"
-        }`}
+              ? "scale-125 -translate-y-2"
+              : "scale-100"
+          }`}
         style={{
           background: isActive
             ? `linear-gradient(135deg, ${color}33, ${color}55)`
             : hovered
-            ? `linear-gradient(135deg, ${color}22, ${color}44)`
-            : "hsl(var(--card))",
+              ? `linear-gradient(135deg, ${color}22, ${color}44)`
+              : "hsl(var(--card))",
           border: `1.5px solid ${isActive ? color + "80" : hovered ? color + "50" : "hsl(var(--border))"}`,
           boxShadow: isActive
             ? `0 0 16px ${glow}, 0 4px 12px ${color}30`
             : hovered
-            ? `0 0 12px ${glow}, 0 8px 20px ${color}25`
-            : "none",
+              ? `0 0 12px ${glow}, 0 8px 20px ${color}25`
+              : "none",
         }}
       >
         <Icon
@@ -119,17 +118,16 @@ function DesktopNavItem({
   return (
     <Link
       href={path}
-      className={`relative flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-sm font-black transition-all duration-300 group overflow-hidden border ${
-        isActive
+      className={`relative flex items-center gap-2.5 px-5 py-2.5 rounded-2xl text-sm font-black transition-all duration-300 group overflow-hidden border ${isActive
           ? "text-white"
           : "text-white/75 hover:text-white"
-      }`}
+        }`}
       style={{
         background: isActive
           ? `linear-gradient(135deg, ${color}, ${color}dd)`
           : hovered
-          ? `linear-gradient(135deg, ${color}22, ${color}33)`
-          : "rgba(255,255,255,0.03)",
+            ? `linear-gradient(135deg, ${color}22, ${color}33)`
+            : "rgba(255,255,255,0.03)",
         borderColor: hovered || isActive ? `${color}66` : "rgba(255,255,255,0.12)",
         boxShadow: hovered || isActive ? `0 0 0 1px ${color}22, 0 0 28px ${glow}` : "none",
       }}
@@ -232,9 +230,9 @@ function UserMenu({ upwards = false }: { upwards?: boolean }) {
                 </Link>
               )}
               <button
-                onClick={async () => { 
-                  setOpen(false); 
-                  await signOut(); 
+                onClick={async () => {
+                  setOpen(false);
+                  await signOut();
                   setLocation("/");
                   toast({
                     title: "Logged out successfully",
@@ -261,6 +259,12 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
   const [scrolled, setScrolled] = useState(false);
   const [showExamToggle, setShowExamToggle] = useState(false);
   const [logoSrc, setLogoSrc] = useState("/Ranktransparent.png");
+
+  const activeNavItems = [
+    { path: "/", label: "Home", icon: LayoutDashboard, color: "#60a5fa", glow: "rgba(96,165,250,0.5)" },
+    { path: "/rank-predictor", label: "Predictor", icon: Target, color: "#818cf8", glow: "rgba(129,140,248,0.5)", badge: "Hot" },
+    { path: "/college-finder", label: "Predict Colleges", icon: BookOpen, color: "#a78bfa", glow: "rgba(167,139,250,0.5)" }
+  ];
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -312,42 +316,41 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden font-sans">
       {/* Global WhatsApp Floating Sidebar Tab */}
-      <a 
+      <a
         href="https://wa.me/919620012369?text=Hello!%20I%20want%20free%20counseling%20for%20counseling%20help."
         target="_blank"
         rel="noopener noreferrer"
-         className="fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white font-extrabold px-1.5 py-2.5 sm:px-3 sm:py-4 rounded-l-lg sm:rounded-l-2xl shadow-2xl flex flex-col items-center gap-1.5 sm:gap-3 transition-all duration-300 hover:-translate-x-1 border-l border-t border-b border-white/20 select-none group"
+        className="fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white font-extrabold px-1.5 py-2.5 sm:px-3 sm:py-4 rounded-l-lg sm:rounded-l-2xl shadow-2xl flex flex-col items-center gap-1.5 sm:gap-3 transition-all duration-300 hover:-translate-x-1 border-l border-t border-b border-white/20 select-none group"
       >
-        <svg 
-           className="w-3 h-3.5 sm:w-4 sm:h-5 fill-current animate-bounce" 
+        <svg
+          className="w-3 h-3.5 sm:w-4 sm:h-5 fill-current animate-bounce"
           viewBox="0 0 24 24"
         >
-          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.66.986 3.292 1.48 4.743 1.481 5.378 0 9.753-4.375 9.756-9.759.002-2.607-1.013-5.059-2.859-6.905C16.398 2.126 13.95 1.11 11.343 1.111c-5.385 0-9.76 4.375-9.764 9.759-.001 1.702.46 3.36 1.332 4.795l-.997 3.641 3.734-.98c1.393.759 2.87 1.168 4.419 1.168zm10.155-6.818c-.28-.14-1.654-.816-1.91-.908-.256-.092-.443-.139-.629.14-.186.278-.718.908-.88 1.093-.163.186-.326.21-.605.07-.28-.14-1.18-.435-2.247-1.387-.83-.74-1.39-1.653-1.552-1.933-.163-.28-.017-.43.123-.569.126-.125.28-.326.42-.489.14-.163.186-.279.28-.465.093-.186.046-.349-.023-.489-.069-.14-.629-1.517-.861-2.074-.227-.547-.456-.473-.629-.482-.163-.008-.349-.01-.535-.01-.186 0-.489.07-.745.349-.256.279-.977.954-.977 2.325s1.001 2.699 1.14 2.885c.14.186 1.97 3.007 4.773 4.213.667.287 1.187.459 1.592.587.67.213 1.28.183 1.763.111.539-.08 1.654-.676 1.887-1.328.232-.653.232-1.213.163-1.328-.07-.113-.256-.184-.536-.324z"/>
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.66.986 3.292 1.48 4.743 1.481 5.378 0 9.753-4.375 9.756-9.759.002-2.607-1.013-5.059-2.859-6.905C16.398 2.126 13.95 1.11 11.343 1.111c-5.385 0-9.76 4.375-9.764 9.759-.001 1.702.46 3.36 1.332 4.795l-.997 3.641 3.734-.98c1.393.759 2.87 1.168 4.419 1.168zm10.155-6.818c-.28-.14-1.654-.816-1.91-.908-.256-.092-.443-.139-.629.14-.186.278-.718.908-.88 1.093-.163.186-.326.21-.605.07-.28-.14-1.18-.435-2.247-1.387-.83-.74-1.39-1.653-1.552-1.933-.163-.28-.017-.43.123-.569.126-.125.28-.326.42-.489.14-.163.186-.279.28-.465.093-.186.046-.349-.023-.489-.069-.14-.629-1.517-.861-2.074-.227-.547-.456-.473-.629-.482-.163-.008-.349-.01-.535-.01-.186 0-.489.07-.745.349-.256.279-.977.954-.977 2.325s1.001 2.699 1.14 2.885c.14.186 1.97 3.007 4.773 4.213.667.287 1.187.459 1.592.587.67.213 1.28.183 1.763.111.539-.08 1.654-.676 1.887-1.328.232-.653.232-1.213.163-1.328-.07-.113-.256-.184-.536-.324z" />
         </svg>
-          <span className="[writing-mode:vertical-lr] text-[8px] sm:text-[11px] font-black uppercase tracking-wider whitespace-nowrap leading-none">
-           Click here for free counselling
+        <span className="[writing-mode:vertical-lr] text-[8px] sm:text-[11px] font-black uppercase tracking-wider whitespace-nowrap leading-none">
+          Click here for free counselling
         </span>
       </a>
 
       {/* ── Top bar ── */}
       <header
-        className={`relative shrink-0 flex items-center gap-3 px-5 py-3 transition-all duration-300 ${
-          scrolled
+        className={`relative shrink-0 flex items-center gap-3 px-5 py-3 transition-all duration-300 ${scrolled
             ? "bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border-b border-slate-700/30 shadow-md shadow-slate-900/20 text-slate-50"
             : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700/30 text-slate-50"
-        }`}
+          }`}
       >
         {/* Brand */}
         <Link href="/" className="flex items-center justify-start -ml-4 sm:-ml-5 group shrink-0">
           <div className="relative h-10 w-[175px] sm:w-[220px] md:w-[280px] overflow-visible shrink-0 transition-all duration-300 group-hover:drop-shadow-[0_0_20px_rgba(96,165,250,0.34)]">
-              <img
-                src={logoSrc}
-                alt="RankPrediction Logo"
-                onError={() => {
-                  if (logoSrc !== "/my-new-logo.svg") setLogoSrc("/my-new-logo.svg");
-                }}
-                className="w-full h-full object-contain scale-[1.42] origin-left transition-transform duration-300 group-hover:scale-[1.5]"
-              />
+            <img
+              src={logoSrc}
+              alt="RankPrediction Logo"
+              onError={() => {
+                if (logoSrc !== "/my-new-logo.svg") setLogoSrc("/my-new-logo.svg");
+              }}
+              className="w-full h-full object-contain scale-[1.42] origin-left transition-transform duration-300 group-hover:scale-[1.5]"
+            />
           </div>
         </Link>
 
@@ -355,7 +358,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
 
         {/* Center Desktop Navigation Pill */}
         <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-2 p-1.5 rounded-[22px] border border-white/20 bg-white/8 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
-          {navItems.map(({ path, label, icon: Icon, color, glow, badge }) => {
+          {activeNavItems.map(({ path, label, icon: Icon, color, glow, badge }) => {
             const isActive = location === path;
             return (
               <DesktopNavItem
@@ -383,11 +386,10 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
             <button
               data-testid="toggle-kcet"
               onClick={() => setExamMode("KCET")}
-              className={`relative px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
-                examMode === "KCET"
+              className={`relative px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${examMode === "KCET"
                   ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md shadow-black/20"
                   : "text-white/70 hover:text-white"
-              }`}
+                }`}
             >
               KCET
               {examMode === "KCET" && (
@@ -397,11 +399,10 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
             <button
               data-testid="toggle-comedk"
               onClick={() => setExamMode("COMEDK")}
-              className={`relative px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
-                examMode === "COMEDK"
+              className={`relative px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${examMode === "COMEDK"
                   ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md shadow-black/20"
                   : "text-white/70 hover:text-white"
-              }`}
+                }`}
             >
               COMEDK
               {examMode === "COMEDK" && (
@@ -442,24 +443,31 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
           {children}
         </div>
 
+        {/* Global AdSense — horizontal banner above footer */}
+        <AdBanner
+          slot="9020022771"
+          format="horizontal"
+          className="px-4 py-2 max-w-5xl mx-auto"
+        />
+
         {/* Global Production Footer */}
         <footer className="mt-8 border-t border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-50 backdrop-blur-lg pb-16 sm:pb-0">
           <div className="max-w-5xl mx-auto px-6 py-6">
-            
+
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
               {/* Column 1: Trust Info & Logo */}
               <div className="space-y-3.5 col-span-1 md:col-span-2 flex flex-col items-center md:items-start text-center md:text-left">
-                <a 
-                  href="https://www.vidhyarthisewa.org/" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href="https://www.vidhyarthisewa.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-3 hover:opacity-90 transition-all w-fit"
                 >
                   <div className="relative w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-extrabold text-lg shadow-md shrink-0 overflow-hidden">
-                    <img 
-                      src="/vidyarthi-sewa-logo.png" 
-                      alt="VS" 
+                    <img
+                      src="/vidyarthi-sewa-logo.png"
+                      alt="VS"
                       className="w-full h-full object-cover absolute inset-0"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = "none";
@@ -504,30 +512,30 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
                 <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Official Resources</h4>
                 <ul className="space-y-1.5 text-[11px] font-semibold text-white/70">
                   <li>
-                    <a 
-                      href="https://cetonline.karnataka.gov.in/kea/" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <a
+                      href="https://cetonline.karnataka.gov.in/kea/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="hover:text-white transition-colors flex items-center gap-1"
                     >
                       KEA Official Portal
                     </a>
                   </li>
                   <li>
-                    <a 
-                      href="https://www.comedk.org/" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <a
+                      href="https://www.comedk.org/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="hover:text-white transition-colors flex items-center gap-1"
                     >
                       COMEDK Portal
                     </a>
                   </li>
                   <li>
-                    <a 
-                      href="https://www.vidhyarthisewa.org/" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <a
+                      href="https://www.vidhyarthisewa.org/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="hover:text-white transition-colors flex items-center gap-1"
                     >
                       Vidhyarthi Sewa Site
@@ -541,10 +549,10 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
             <hr className="border-white/10 my-4" />
             <div className="text-center text-[10px] text-white/60 font-medium">
               © {new Date().getFullYear()} RankPrediction. Developed by{" "}
-              <a 
-                href="https://openalgon.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://openalgon.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white hover:text-white/80 font-bold transition-colors underline decoration-dotted decoration-white/50"
               >
                 OpenAlgon
@@ -563,7 +571,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
           backdropFilter: "blur(20px)",
         }}
       >
-        {navItems.map(({ path, label, icon: Icon, color, badge }) => {
+        {activeNavItems.map(({ path, label, icon: Icon, color, badge }) => {
           const isActive = location === path;
           return (
             <Link
@@ -608,7 +616,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
               </button>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {navItems.map(({ path, label, icon: Icon, color }) => {
+              {activeNavItems.map(({ path, label, icon: Icon, color }) => {
                 const isActive = location === path;
                 return (
                   <Link
@@ -633,17 +641,15 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
                   <>
                     <button
                       onClick={() => setExamMode("KCET")}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                        examMode === "KCET" ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
-                      }`}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${examMode === "KCET" ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
+                        }`}
                     >
                       KCET
                     </button>
                     <button
                       onClick={() => setExamMode("COMEDK")}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                        examMode === "COMEDK" ? "bg-violet-500 text-white" : "bg-muted text-muted-foreground"
-                      }`}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${examMode === "COMEDK" ? "bg-violet-500 text-white" : "bg-muted text-muted-foreground"
+                        }`}
                     >
                       COMEDK
                     </button>

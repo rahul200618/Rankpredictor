@@ -3,11 +3,12 @@
 -- that gets auto-populated when a user verifies their OTP.
 
 CREATE TABLE IF NOT EXISTS public.user_profiles (
-  id          uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  phone       text,
-  full_name   text,
-  created_at  timestamptz DEFAULT now(),
-  last_seen_at timestamptz DEFAULT now()
+  id                   uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  phone                text,
+  full_name            text,
+  interested_subjects  text[] DEFAULT '{}',
+  created_at           timestamptz DEFAULT now(),
+  last_seen_at         timestamptz DEFAULT now()
 );
 
 -- Enable Row Level Security

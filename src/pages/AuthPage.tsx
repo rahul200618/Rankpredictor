@@ -4,18 +4,56 @@ import { useLocation } from "wouter";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sparkles, Phone, Lock, ArrowRight, Shield,
-  CheckCircle2, Loader2, Check, ChevronDown, User, Layers
+  CheckCircle2, Loader2, Check, ChevronDown, User, BookOpen
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
+// ── Interested Subject Options ────────────────────────────────────────────────
+const SUBJECT_OPTIONS = [
+  {
+    id: "engineering",
+    label: "Engineering",
+    emoji: "⚙️",
+    description: "B.E / B.Tech programmes",
+    color: "from-blue-500 to-indigo-600",
+    ring: "ring-blue-500/60",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/40",
+    text: "text-blue-600 dark:text-blue-400",
+  },
+  {
+    id: "pharmacy",
+    label: "Pharmacy",
+    emoji: "💊",
+    description: "B.Pharm / Pharm.D programmes",
+    color: "from-emerald-500 to-teal-600",
+    ring: "ring-emerald-500/60",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/40",
+    text: "text-emerald-600 dark:text-emerald-400",
+  },
+  {
+    id: "allied_science",
+    label: "Allied Science / Agriculture / Veterinary",
+    emoji: "🌿",
+    description: "B.Sc Agriculture, Veterinary & Allied Health",
+    color: "from-amber-500 to-orange-500",
+    ring: "ring-amber-500/60",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/40",
+    text: "text-amber-600 dark:text-amber-400",
+  },
+];
+
 export default function AuthPage() {
-  const { sendOtp, verifyOtp, updateDisplayName, user } = useAuth();
+  const { sendOtp, verifyOtp, updateDisplayName, user, isDevMode } = useAuth();
   const [, navigate] = useLocation();
 
   // ── Form States ──────────────────────────────────────────────────────────
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [interestedSubjects, setInterestedSubjects] = useState<string[]>([]);
 
   // ── System States ────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -24,8 +62,6 @@ export default function AuthPage() {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [error, setError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
-
-  const { isSimulated } = useAuth();
 
   // Cooldown countdown
   const startCooldown = () => {
@@ -39,6 +75,13 @@ export default function AuthPage() {
   };
 
   const formatPhone = (raw: string) => raw.replace(/\D/g, "").slice(0, 10);
+
+  // Toggle a subject selection
+  const toggleSubject = (id: string) => {
+    setInterestedSubjects(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+  };
 
   // ── Action: Send OTP ─────────────────────────────────────────────────────
   const handleSendOtp = async (e?: React.MouseEvent) => {
@@ -55,11 +98,7 @@ export default function AuthPage() {
         description: "Please check your phone for the 6-digit verification code.",
       });
     } catch (err: any) {
-      if (err.message?.includes("api-key-not-valid")) {
-        setError("Invalid Firebase configuration. Please use local simulated mode.");
-      } else {
-        setError(err.message ?? "Failed to send OTP. Try again.");
-      }
+      setError(err.message ?? "Failed to send OTP. Try again.");
     } finally {
       setLoading(false);
     }
@@ -69,6 +108,10 @@ export default function AuthPage() {
   const handleCompleteSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setError("Please enter your full name"); return; }
+    if (interestedSubjects.length === 0) {
+      setError("Please select at least one stream you're interested in");
+      return;
+    }
 
     const code = otp.join("");
     if (code.length !== 6) { setError("Enter the 6-digit OTP code"); return; }
@@ -82,29 +125,29 @@ export default function AuthPage() {
           await verifyOtp(code);
           setOtpVerified(true);
         } catch (verifyErr: any) {
-          const msg = verifyErr?.message ?? "Invalid verification code. Please check and try again.";
           setError(
-            isSimulated
-              ? `Invalid code. In test mode, use: 123456`
-              : msg
+            isDevMode
+              ? `Dev mode: use code 123456`
+              : (verifyErr?.message ?? "Invalid verification code. Please check and try again.")
           );
           setLoading(false);
           return;
         }
       }
 
-      // 2. Save display name in Firebase/Simulated session
+      // 2. Save display name in Firebase profile
       await updateDisplayName(name.trim());
 
-      // Use AuthContext user to avoid Firebase import crashes in simulated mode
-      const uid = (user && "uid" in user ? user.uid : undefined) || `sim-user-+91${phone}`;
+      const uid = (user && "uid" in user ? (user as any).uid : undefined) ?? `dev-+91${phone}`;
 
       try {
         // Fire and forget to avoid blocking login flow
         supabase.from("user_profiles").upsert({
           id: uid,
           phone: `+91${phone}`,
-          full_name: name.trim()
+          full_name: name.trim(),
+          interested_subjects: interestedSubjects,
+          interested_exams: [],
         }).then(({ error }) => {
           if (error) console.warn("Failed to write to Supabase: ", error);
         });
@@ -134,11 +177,10 @@ export default function AuthPage() {
       await verifyOtp(code);
       setOtpVerified(true);
     } catch (err: any) {
-      const msg = err.message ?? "Invalid code";
       setError(
-        isSimulated
-          ? `Invalid code. In test mode, use: 123456`
-          : msg
+        isDevMode
+          ? `Dev mode: use code 123456`
+          : (err.message ?? "Invalid verification code. Please try again.")
       );
       // Clear the OTP boxes so user can re-enter
       setOtp(["", "", "", "", "", ""]);
@@ -222,6 +264,65 @@ export default function AuthPage() {
               </div>
             </div>
 
+            {/* ── Interested Subjects Multi-Select (Required) ── */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-foreground/70 uppercase tracking-wider flex items-center gap-1.5">
+                <BookOpen size={12} className="text-muted-foreground" />
+                Interested Stream
+                <span className="text-[10px] font-semibold text-red-500 ml-1">* required</span>
+              </label>
+              <p className="text-[11px] text-muted-foreground -mt-0.5">Select all that apply</p>
+              <div className="grid grid-cols-1 gap-2.5">
+                {SUBJECT_OPTIONS.map(opt => {
+                  const isSelected = interestedSubjects.includes(opt.id);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => toggleSubject(opt.id)}
+                      className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]
+                        ${isSelected
+                          ? `${opt.border} ${opt.bg} ring-2 ${opt.ring}`
+                          : "border-border bg-muted/20 hover:border-border/80 hover:bg-muted/30"
+                        }`}
+                    >
+                      {/* Checkbox circle */}
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200
+                        ${isSelected ? `${opt.border} ${opt.bg}` : "border-muted-foreground/40 bg-transparent"}`}
+                      >
+                        {isSelected && (
+                          <svg viewBox="0 0 10 10" className="w-3 h-3" fill="none">
+                            <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={opt.text} />
+                          </svg>
+                        )}
+                      </div>
+
+                      {/* Emoji + label */}
+                      <span className="text-xl leading-none select-none">{opt.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className={`text-sm font-bold transition-colors ${isSelected ? opt.text : "text-foreground"}`}>
+                          {opt.label}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">{opt.description}</div>
+                      </div>
+
+                      {/* Selected badge */}
+                      {isSelected && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${opt.bg} ${opt.text} border ${opt.border}`}>
+                          Selected
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {interestedSubjects.length === 0 && (
+                <p className="text-[10px] text-muted-foreground/70 italic pt-0.5">
+                  You must select at least one stream to continue
+                </p>
+              )}
+            </div>
+
             {/* Phone Input with Send OTP Button inline */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-foreground/70 uppercase tracking-wider">
@@ -280,9 +381,9 @@ export default function AuthPage() {
                   ) : null}
                 </div>
 
-                {isSimulated && (
+                {isDevMode && (
                   <p className="text-[10px] text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5 font-semibold">
-                    🧪 Test mode — use code: <strong>123456</strong>
+                    🛠️ Localhost dev mode — enter code: <strong>123456</strong>
                   </p>
                 )}
 
@@ -321,7 +422,7 @@ export default function AuthPage() {
             {/* Complete Signup Button */}
             <button
               type="submit"
-              disabled={loading || otp.join("").length !== 6 || !name.trim()}
+              disabled={loading || otp.join("").length !== 6 || !name.trim() || interestedSubjects.length === 0}
               className="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white rounded-xl font-black text-sm shadow-xl shadow-indigo-500/25 hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.01] active:scale-[0.99] mt-6"
             >
               {loading ? (

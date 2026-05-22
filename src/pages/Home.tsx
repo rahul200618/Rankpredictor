@@ -62,6 +62,11 @@ const STREAMS = [
   { id: "allied_science", label: "Allied Science" },
 ];
 
+const EXAMS = [
+  { id: "kcet", label: "KCET" },
+  { id: "comedk", label: "COMEDK" },
+];
+
 export default function Home() {
   const { examMode, setExamMode } = useExamMode();
   const supabaseAny = supabase as any;
@@ -75,6 +80,7 @@ export default function Home() {
   const [enquiryPhone, setEnquiryPhone] = useState("");
   const [enquiryEmail, setEnquiryEmail] = useState("");
   const [selectedStreams, setSelectedStreams] = useState<string[]>([]);
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [enquiryMessage, setEnquiryMessage] = useState("");
   
   const [submitting, setSubmitting] = useState(false);
@@ -127,15 +133,17 @@ export default function Home() {
         if (enquiries.length === 0) return;
 
         console.log(`Attempting to sync ${enquiries.length} offline enquiries back to database...`);
-        const { error } = await supabaseAny.from("counseling_enquiries").insert(
+        const { error } = await supabaseAny.from("counseling_enquiries").upsert(
           enquiries.map((e: any) => ({
             name: e.name,
             phone: e.phone,
             email: e.email || null,
             interested_streams: e.interested_streams || [],
+            interested_exams: e.interested_exams || [],
             message: e.message || null,
             created_at: e.created_at || new Date().toISOString()
-          }))
+          })),
+          { onConflict: 'phone' }
         );
 
         if (!error) {
@@ -173,11 +181,15 @@ export default function Home() {
       phone: enquiryPhone.trim(),
       email: enquiryEmail.trim() || null,
       interested_streams: selectedStreams,
+      interested_exams: selectedExams,
       message: enquiryMessage.trim() || null,
     };
 
     try {
-      const { error } = await supabaseAny.from("counseling_enquiries").insert([payload]);
+      const { error } = await supabaseAny.from("counseling_enquiries").upsert(
+        [payload],
+        { onConflict: 'phone' }
+      );
 
       if (error) throw error;
 
@@ -186,6 +198,7 @@ export default function Home() {
       setEnquiryPhone("");
       setEnquiryEmail("");
       setSelectedStreams([]);
+      setSelectedExams([]);
       setEnquiryMessage("");
     } catch (err: any) {
       console.warn("Database save failed, trying local backup fallback:", err.message);
@@ -203,6 +216,7 @@ export default function Home() {
         setEnquiryPhone("");
         setEnquiryEmail("");
         setSelectedStreams([]);
+        setSelectedExams([]);
         setEnquiryMessage("");
       } catch (backupErr) {
         setSubmitError("Failed to submit enquiry. Please check your network connection.");
@@ -572,6 +586,42 @@ export default function Home() {
                             {isSelected && <Check size={10} strokeWidth={3} />}
                           </div>
                           <span>{stream.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Target Counseling Exams */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground block">Target Counseling Exams (Optional)</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {EXAMS.map(exam => {
+                      const isSelected = selectedExams.includes(exam.label);
+                      return (
+                        <button
+                          key={exam.id}
+                          type="button"
+                          disabled={submitting}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedExams(selectedExams.filter(e => e !== exam.label));
+                            } else {
+                              setSelectedExams([...selectedExams, exam.label]);
+                            }
+                          }}
+                          className={`flex items-center gap-2 px-3 py-2 border rounded-xl text-xs font-bold transition-all text-left ${
+                            isSelected 
+                              ? "bg-primary/10 border-primary text-primary shadow-sm"
+                              : "bg-muted/30 border-border text-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
+                            isSelected ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                          }`}>
+                            {isSelected && <Check size={10} strokeWidth={3} />}
+                          </div>
+                          <span>{exam.label}</span>
                         </button>
                       );
                     })}

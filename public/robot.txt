@@ -1,0 +1,7 @@
+
+# Compatibility file in case someone requests /robot.txt (singular)
+User-agent: *
+Disallow:
+
+# Sitemap
+Sitemap: https://rankprediction.com/sitemap.xml

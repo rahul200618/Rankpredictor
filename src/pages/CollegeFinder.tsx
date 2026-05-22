@@ -12,7 +12,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Search, MapPin, GraduationCap, Star, Users, Check, ChevronsUpDown, FileSpreadsheet, Trash2, FileText, AlertCircle, Info, ChevronDown, ChevronUp, BarChart3, Download, Bookmark, Scale, X, Sparkles, Filter, SlidersHorizontal } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { XLSXLoader } from "@/lib/xlsx-loader"
 import { finderStore } from "@/store/finderStore"
 import { loadSettings } from '@/lib/settings'
 import { Progress } from "@/components/ui/progress"
@@ -20,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { normalizeCourse, getUniqueCourses, isSameCourse } from "@/lib/course-normalizer"
 import { getPdfUrlWithPage } from "@/lib/pdf-url-mapper"
 import { extractPdfPage, getTrustMeta } from "@/lib/data-trust"
+import { useExamMode } from "@/contexts/ExamModeContext"
 
 interface CutoffData {
   institute: string
@@ -150,6 +150,16 @@ const Sparkline = ({ data }: { data: number[] }) => {
   )
 }
 const CollegeFinder = () => {
+  const { examMode } = useExamMode()
+
+  const headerGradient = examMode === "COMEDK"
+    ? "from-amber-600 via-orange-500 to-yellow-500"
+    : "from-slate-700 via-emerald-400 to-violet-400"
+
+  const sparklesBadgeStyle = examMode === "COMEDK"
+    ? "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
+    : "bg-slate-700/10 border-slate-700/20 text-slate-700 dark:text-slate-400"
+
   const [cutoffs, setCutoffs] = useState<CutoffData[]>([])
   const [matches, setMatches] = useState<CollegeMatch[]>([])
   const [loading, setLoading] = useState(true)
@@ -189,14 +199,18 @@ const CollegeFinder = () => {
   const { toast } = useToast()
 
   // Bookmarked colleges (persisted to localStorage)
-  const [bookmarks, setBookmarks] = useState<Set<string>>(() => {
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set())
+
+  // Load bookmarks dynamically when examMode changes
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('kcet_bookmarks')
-      return saved ? new Set(JSON.parse(saved)) : new Set()
+      const key = examMode === "COMEDK" ? 'comedk_bookmarks' : 'kcet_bookmarks'
+      const saved = localStorage.getItem(key)
+      setBookmarks(saved ? new Set(JSON.parse(saved)) : new Set())
     } catch {
-      return new Set()
+      setBookmarks(new Set())
     }
-  })
+  }, [examMode])
 
   // Toggle bookmark for a college
   const toggleBookmark = (key: string) => {
@@ -207,7 +221,8 @@ const CollegeFinder = () => {
       } else {
         next.add(key)
       }
-      localStorage.setItem('kcet_bookmarks', JSON.stringify([...next]))
+      const storageKey = examMode === "COMEDK" ? 'comedk_bookmarks' : 'kcet_bookmarks'
+      localStorage.setItem(storageKey, JSON.stringify([...next]))
       return next
     })
   }
@@ -285,14 +300,18 @@ const CollegeFinder = () => {
     const doc = new jsPDF()
 
     // Add Background Graphics (Subtle header bar)
-    doc.setFillColor(59, 130, 246) // Blue-500
+    if (examMode === "COMEDK") {
+      doc.setFillColor(245, 158, 11) // Amber-500
+    } else {
+      doc.setFillColor(59, 130, 246) // Blue-500
+    }
     doc.rect(0, 0, 210, 40, 'F')
 
     // Header Text
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(22)
     doc.setFont('helvetica', 'bold')
-    doc.text("KCET College Finder", 14, 20)
+    doc.text(`${examMode} College Finder`, 14, 20)
 
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
@@ -362,11 +381,11 @@ const CollegeFinder = () => {
         doc.setFontSize(8)
         doc.setTextColor(150)
         doc.text(`Page ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10)
-        doc.text("Verify data with official KEA documents", 140, doc.internal.pageSize.height - 10)
+        doc.text(`Verify data with official ${examMode === "COMEDK" ? "COMEDK" : "KEA"} documents`, 140, doc.internal.pageSize.height - 10)
       }
     })
 
-    doc.save(`kcet_colleges_rank_${userRank}.pdf`)
+    doc.save(`${examMode.toLowerCase()}_colleges_rank_${userRank}.pdf`)
     toast({ title: "Exported!", description: "PDF downloaded successfully" })
   }
 
@@ -820,16 +839,28 @@ const CollegeFinder = () => {
     return () => clearInterval(id)
   }, [loading])
 
+  // Trigger reloading and reset selections when examMode changes
+  useEffect(() => {
+    setLoading(true)
+    setMatches([])
+    setSelectedInstitute("")
+    setSelectedCourses([])
+    setCollegeSearchTerm("")
+    setLocationFilter("")
+    setUserCategory("ALL")
+  }, [examMode])
+
   // Load cutoff data from available JSON sources (prefer master first).
   useEffect(() => {
+    if (!loading) return
     const loadData = async () => {
       try {
         setProgress(10)
 
         // Load from the consolidated master dataset directly
-        const urls = [
-          '/data/kcet_cutoffs_consolidated.json'
-        ]
+        const urls = examMode === "COMEDK"
+          ? ['/data/comedk_cutoffs.json']
+          : ['/data/kcet_cutoffs_consolidated.json']
         let response: Response | null = null
         let dataSource = ''
         for (const url of urls) {
@@ -964,80 +995,9 @@ const CollegeFinder = () => {
     }
 
     loadData()
-  }, [toast])
+  }, [toast, examMode, loading])
 
-  // Load data from XLSX files automatically
-  const loadFromXLSX = async () => {
-    setLoading(true)
-    setProgress(10)
-    try {
-      const result = await XLSXLoader.loadAllXLSXFiles()
-      setProgress(55)
 
-      // Convert XLSX data to match existing format
-      const convertedData: CutoffData[] = result.cutoffs.map(item => ({
-        institute: item.institute || '',
-        institute_code: item.institute_code || '',
-        course: mapCourseName(item.course || ''),
-        category: item.category || '',
-        cutoff_rank: item.cutoff_rank || 0,
-        year: item.year || '',
-        round: item.round || ''
-      }))
-
-      setCutoffs(convertedData)
-      setMetadata(null)
-      setProgress(80)
-
-      // Extract unique values for options
-      const years = [...new Set(convertedData.map(item => item.year))].sort((a, b) => b.localeCompare(a))
-      const categories = [...new Set(convertedData.map(item => item.category))].sort()
-      const courses = [...new Set(convertedData.map(item => item.course))].sort()
-      const institutesMap = new Map<string, InstituteOption>()
-      convertedData.forEach(item => {
-        const option = buildInstituteOption(item.institute_code, item.institute)
-        if (option.name) {
-          institutesMap.set(option.value, option)
-        }
-      })
-      const institutes = Array.from(institutesMap.values()).sort((a, b) => a.label.localeCompare(b.label))
-      const rounds = [...new Set(convertedData.map(item => item.round))].sort()
-
-      setAvailableYears(years)
-      setAvailableCategories(['ALL', ...categories])
-      setAvailableCourses(courses)
-      setAvailableInstitutes(institutes)
-      setAvailableRounds(['ALL', ...rounds])
-      setProgress(90)
-
-      // Set default values
-      if (years.length > 0) {
-        setSelectedYear(years[0])
-      }
-      if (categories.length > 0) {
-        setUserCategory('ALL')
-      }
-      if (rounds.length > 0) {
-        setSelectedRound('ALL')
-      }
-
-      toast({
-        title: "Success",
-        description: `Loaded ${convertedData.length.toLocaleString()} cutoff entries from XLSX files!`,
-      })
-    } catch (error: any) {
-      console.error('Error loading XLSX data:', error)
-      toast({
-        title: "Error",
-        description: error?.message || 'Failed to load XLSX files',
-        variant: "destructive"
-      })
-    } finally {
-      setProgress(100)
-      setSecondsLeft(0)
-      setTimeout(() => setLoading(false), 200)
-    }
-  }
 
   // When year changes, recompute available rounds for that year only
   useEffect(() => {
@@ -1353,15 +1313,15 @@ const CollegeFinder = () => {
     return (
       <div className="min-h-screen bg-background pb-20 md:pb-0">
         <SEO
-          title="College Finder"
-          description="Find the perfect engineering college based on your KCET rank, category, and preferences with smart filtering."
+          title={`${examMode} College Finder`}
+          description={`Find the perfect engineering college based on your ${examMode} rank, category, and preferences with smart filtering.`}
           url="https://rankprediction.com/college-finder"
-          keywords="KCET college finder, find colleges by rank, KCET 2026 colleges, best engineering colleges for my rank, KCET rank wise college list"
+          keywords={`${examMode} college finder, find colleges by rank, ${examMode} 2026 colleges, best engineering colleges for my rank, ${examMode} rank wise college list`}
         />
         <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">College Finder</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Find the best colleges based on your KCET rank and preferences</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{examMode} College Finder</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Find the best colleges based on your {examMode} rank and preferences</p>
           </div>
           <div className="py-8 mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Premium 3D Animated Loader */}
@@ -1382,7 +1342,7 @@ const CollegeFinder = () => {
                   100% { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
                 }
               `}</style>
-              <h3 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-700 via-emerald-400 to-violet-400 animate-pulse mb-2">Analyzing Data Matrix</h3>
+              <h3 className={`text-xl font-black bg-clip-text text-transparent bg-gradient-to-r ${headerGradient} animate-pulse mb-2`}>Analyzing Data Matrix</h3>
               <p className="text-muted-foreground font-medium text-sm text-center">Loading verified cutoff registries...</p>
             </div>
 
@@ -1439,25 +1399,25 @@ const CollegeFinder = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <SEO
-        title="College Finder"
-        description="Find the perfect engineering college based on your KCET rank, category, and preferences with smart filtering."
+        title={`${examMode} College Finder`}
+        description={`Find the perfect engineering college based on your ${examMode} rank, category, and preferences with smart filtering.`}
         url="https://rankprediction.com/college-finder"
       />
       {/* Animated Background */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
-        <div className="absolute top-0 -left-4 w-96 h-96 bg-slate-700 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float" />
-        <div className="absolute bottom-0 -right-4 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float-delayed" />
+        <div className={`absolute top-0 -left-4 w-96 h-96 ${examMode === "COMEDK" ? "bg-amber-500" : "bg-slate-700"} rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float`} />
+        <div className={`absolute bottom-0 -right-4 w-96 h-96 ${examMode === "COMEDK" ? "bg-orange-400" : "bg-emerald-400"} rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float-delayed`} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-slate-700/5 to-transparent rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6 max-w-7xl">
         <div className="space-y-4 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-700/10 border border-slate-700/20 text-slate-700 dark:text-slate-400 text-xs font-medium">
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${sparklesBadgeStyle} text-xs font-medium`}>
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Official KCET 2024-25 Data</span>
+            <span>Official {examMode} {examMode === "COMEDK" ? "2022-25" : "2024-25"} Data</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-700 via-emerald-400 to-violet-400">
-            College Finder
+          <h1 className={`text-4xl sm:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r ${headerGradient}`}>
+            {examMode} College Finder
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
             Filter through verified cutoff positions from previous years to find your perfect engineering college.
@@ -1467,7 +1427,7 @@ const CollegeFinder = () => {
         {/* Disclaimer */}
         <div className="max-w-4xl mb-8 bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex gap-3 text-sm text-red-700 dark:text-red-500 backdrop-blur-sm">
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
-          <p>Please cross-check all cutoff data with the official KCET PDFs. Our filtering system might miss an entry or two.</p>
+          <p>Please cross-check all cutoff data with the official {examMode} PDFs. Our filtering system might miss an entry or two.</p>
         </div>
 
         {/* Search Criteria */}
@@ -1496,7 +1456,7 @@ const CollegeFinder = () => {
               <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {/* Rank Input */}
                 <div className="space-y-2">
-                  <Label htmlFor="rank">Your KCET Rank</Label>
+                  <Label htmlFor="rank">Your {examMode} Rank</Label>
                   <Input
                     id="rank"
                     type="number"

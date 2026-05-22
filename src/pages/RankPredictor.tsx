@@ -12,6 +12,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { AdBanner } from "@/components/AdBanner";
 
 // ─── Custom Canvas Confetti Blaster (Zero Dependency) ─────────────────────────────
 const triggerConfetti = () => {
@@ -125,10 +126,10 @@ function NumInput({ label, value, max, onChange, icon: Icon, color, sublabel }: 
       <div className="relative">
         <input
           type="number" min={0} max={max} value={value}
-          onChange={e => { 
+          onChange={e => {
             if (e.target.value === "") { onChange(""); return; }
-            const v = Math.max(0, Math.min(max, Number(e.target.value))); 
-            onChange(isNaN(v) ? "" : v); 
+            const v = Math.max(0, Math.min(max, Number(e.target.value)));
+            onChange(isNaN(v) ? "" : v);
           }}
           className="w-full px-3 py-2.5 pr-12 text-lg font-extrabold tabular-nums text-center rounded-xl border-2 focus:outline-none transition-all duration-200 bg-background"
           style={{ borderColor: color + "40", color }}
@@ -227,6 +228,22 @@ export default function RankPredictor() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
+  // Fetch user's interested subjects for enriching rank saves
+  const [interestedSubjects, setInterestedSubjects] = useState<string[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    const phone = "phoneNumber" in user ? (user.phoneNumber ?? "") : "";
+    if (!phone) return;
+    supabase
+      .from("user_profiles")
+      .select("interested_subjects")
+      .eq("phone", phone)
+      .single()
+      .then(({ data }) => {
+        if (data?.interested_subjects) setInterestedSubjects(data.interested_subjects);
+      });
+  }, [user]);
+
   const [phyKcet, setPhyKcet] = useState<number | "">("");
   const [chemKcet, setChemKcet] = useState<number | "">("");
   const [mathKcet, setMathKcet] = useState<number | "">("");
@@ -244,6 +261,35 @@ export default function RankPredictor() {
   const [revealed, setRevealed] = useState(false);
   const [calculated, setCalculated] = useState(false);
 
+  // ── Save rank result to Supabase (fire-and-forget) ────────────────────────
+  const saveRankResult = (rankLow: number, rankHigh: number, keaScore: number) => {
+    if (!user) return;
+    const phone = "phoneNumber" in user ? (user.phoneNumber ?? "") : "";
+    const fullName = "displayName" in user ? (user.displayName ?? "") : "";
+    (supabase as any)
+      .from("student_rank_results")
+      .upsert({
+        phone,
+        full_name: fullName,
+        interested_subjects: interestedSubjects,
+        exam_mode: examMode,
+        kcet_total: subjectMode
+          ? (Number(phyKcet) || 0) + (Number(chemKcet) || 0) + (Number(mathKcet) || 0)
+          : Number(simpleKcet) || 0,
+        board_avg: subjectMode
+          ? ((Number(phyBoard) || 0) + (Number(chemBoard) || 0) + (Number(mathBoard) || 0)) / 3
+          : Number(simplePuc) || 0,
+        kea_score: keaScore,
+        predicted_rank_low: rankLow,
+        predicted_rank_high: rankHigh,
+      }, {
+        onConflict: "phone,exam_mode"
+      })
+      .then(({ error }: any) => {
+        if (error) console.warn("[student_rank_results] save failed:", error.message);
+      });
+  };
+
   const handlePredictClick = () => {
     const hasKcet = subjectMode ? (phyKcet !== "" || chemKcet !== "" || mathKcet !== "") : simpleKcet !== "";
     const hasBoard = subjectMode ? (phyBoard !== "" || chemBoard !== "" || mathBoard !== "") : simplePuc !== "";
@@ -259,7 +305,18 @@ export default function RankPredictor() {
 
     setCalculated(true);
     triggerConfetti();
-    
+
+    // Auto-save rank result to Supabase (non-blocking)
+    const pred = predictRank(
+      subjectMode
+        ? (Number(phyKcet) || 0) + (Number(chemKcet) || 0) + (Number(mathKcet) || 0)
+        : Number(simpleKcet) || 0,
+      subjectMode
+        ? ((Number(phyBoard) || 0) + (Number(chemBoard) || 0) + (Number(mathBoard) || 0)) / 3
+        : Number(simplePuc) || 0
+    );
+    saveRankResult(pred.low, pred.high, pred.composite);
+
     // Smooth scroll to the result card on mobile
     if (window.innerWidth < 1024 && cardRef.current) {
       cardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -271,8 +328,8 @@ export default function RankPredictor() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
-  const kcetTotal = subjectMode ? (Number(phyKcet)||0) + (Number(chemKcet)||0) + (Number(mathKcet)||0) : (Number(simpleKcet)||0);
-  const pucPct = subjectMode ? ((Number(phyBoard)||0) + (Number(chemBoard)||0) + (Number(mathBoard)||0)) / 3 : (Number(simplePuc)||0);
+  const kcetTotal = subjectMode ? (Number(phyKcet) || 0) + (Number(chemKcet) || 0) + (Number(mathKcet) || 0) : (Number(simpleKcet) || 0);
+  const pucPct = subjectMode ? ((Number(phyBoard) || 0) + (Number(chemBoard) || 0) + (Number(mathBoard) || 0)) / 3 : (Number(simplePuc) || 0);
   const prediction = predictRank(kcetTotal, pucPct);
 
   const keaScore = prediction.composite;
@@ -285,8 +342,8 @@ export default function RankPredictor() {
     confidence === "High Confidence"
       ? { color: "text-emerald-600 dark:text-emerald-400", bar: "bg-emerald-500", width: "83%", dot: "#10b981" }
       : confidence === "Moderate Confidence"
-      ? { color: "text-amber-600 dark:text-amber-400", bar: "bg-amber-500", width: "58%", dot: "#f59e0b" }
-      : { color: "text-red-600 dark:text-red-400", bar: "bg-red-500", width: "35%", dot: "#ef4444" };
+        ? { color: "text-amber-600 dark:text-amber-400", bar: "bg-amber-500", width: "58%", dot: "#f59e0b" }
+        : { color: "text-red-600 dark:text-red-400", bar: "bg-red-500", width: "35%", dot: "#ef4444" };
 
   useEffect(() => {
     setRevealed(false);
@@ -317,10 +374,10 @@ export default function RankPredictor() {
         predicted_rank_low: rankLow,
         predicted_rank_high: rankHigh,
       };
-      
+
       const { data, error } = await supabase.from('saved_marks').insert([newEntry]).select().single();
       if (error) throw error;
-      
+
       const mappedEntry: SavedEntry = {
         id: data.id,
         examMode: data.exam_mode,
@@ -338,7 +395,7 @@ export default function RankPredictor() {
         predictedRankHigh: data.predicted_rank_high,
         createdAt: data.created_at,
       };
-      
+
       setSavedEntries(prev => [mappedEntry, ...prev]);
       setSaveState("saved");
       setShowHistory(true);
@@ -359,7 +416,7 @@ export default function RankPredictor() {
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-        
+
       if (!error && data) {
         const mappedData: SavedEntry[] = data.map((d: any) => ({
           id: d.id,
@@ -412,7 +469,7 @@ export default function RankPredictor() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
-      <SEO 
+      <SEO
         title={`${examMode} Rank Predictor & Marks vs Rank 2025/2026`}
         description={`Predict your ${examMode} 2025 & 2026 expected ranks instantly. Highly calibrated ${examMode} Marks vs Rank calculator based on the official KEA scoring model.`}
         keywords={`${examMode.toLowerCase()} rank predictor, ${examMode.toLowerCase()} marks vs rank, ${examMode.toLowerCase()} 2026 rank predictor, ${examMode.toLowerCase()} 2025 marks vs rank, comedk rank predictor, comedk marks vs rank, kea rank calculator`}
@@ -431,64 +488,64 @@ export default function RankPredictor() {
 
       {/* Main Grid Container: Left (Inputs) vs Right (Sticky Results Card) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
+
         {/* ── LEFT SIDE (Input Marks) ── */}
         <div className="lg:col-span-7 space-y-5 animate-slide-up">
-          
+
           {/* Subject-Wise Marks Cards */}
           <div className="space-y-4">
-              {/* Board Marks */}
-              <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-sm font-extrabold text-foreground">Board (PUC / 12th) Marks</div>
-                    <div className="text-xs text-muted-foreground">Enter marks out of 100 per subject</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-black gradient-text tabular-nums">{pucPct.toFixed(1)}%</div>
-                    <div className="text-xs text-muted-foreground">PCM average</div>
-                  </div>
+            {/* Board Marks */}
+            <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-sm font-extrabold text-foreground">Board (PUC / 12th) Marks</div>
+                  <div className="text-xs text-muted-foreground">Enter marks out of 100 per subject</div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <NumInput label="Physics" value={phyBoard} max={100} onChange={setPhyBoard} icon={Atom} color="#f472b6" sublabel="Phy" />
-                  <NumInput label="Chemistry" value={chemBoard} max={100} onChange={setChemBoard} icon={FlaskConical} color="#fb923c" sublabel="Chem" />
-                  <NumInput label="Maths" value={mathBoard} max={100} onChange={setMathBoard} icon={Calculator} color="#facc15" sublabel="Math" />
+                <div className="text-right">
+                  <div className="text-2xl font-black gradient-text tabular-nums">{pucPct.toFixed(1)}%</div>
+                  <div className="text-xs text-muted-foreground">PCM average</div>
                 </div>
               </div>
-
-              {/* KCET Marks */}
-              <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-sm font-extrabold text-foreground">{examMode} Marks</div>
-                    <div className="text-xs text-muted-foreground">Max 60 per subject</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-black gradient-text tabular-nums">{kcetTotal}</div>
-                    <div className="text-xs text-muted-foreground">/ 180 total</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <NumInput label="Physics" value={phyKcet} max={60} onChange={setPhyKcet} icon={Atom} color="#60a5fa" sublabel="Phy" />
-                  <NumInput label="Chemistry" value={chemKcet} max={60} onChange={setChemKcet} icon={FlaskConical} color="#34d399" sublabel="Chem" />
-                  <NumInput label="Maths" value={mathKcet} max={60} onChange={setMathKcet} icon={Calculator} color="#a78bfa" sublabel="Math" />
-                </div>
-                <div className="mt-4 h-3 rounded-full overflow-hidden flex gap-0.5">
-                  <div className="h-full rounded-l-full transition-all duration-300" style={{ width: `${((Number(phyKcet)||0) / 180) * 100}%`, background: "#60a5fa" }} />
-                  <div className="h-full transition-all duration-300" style={{ width: `${((Number(chemKcet)||0) / 180) * 100}%`, background: "#34d399" }} />
-                  <div className="h-full transition-all duration-300" style={{ width: `${((Number(mathKcet)||0) / 180) * 100}%`, background: "#a78bfa" }} />
-                  <div className="flex-1 h-full bg-muted rounded-r-full" />
-                </div>
-                <div className="flex gap-4 mt-1.5">
-                  {[["Physics", "#60a5fa", phyKcet], ["Chemistry", "#34d399", chemKcet], ["Maths", "#a78bfa", mathKcet]].map(([l, c, v]) => (
-                    <div key={l as string} className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full" style={{ background: c as string }} />
-                      <span className="text-[10px] text-muted-foreground">{l}: <strong style={{ color: c as string }}>{v}</strong></span>
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-3 gap-3">
+                <NumInput label="Physics" value={phyBoard} max={100} onChange={setPhyBoard} icon={Atom} color="#f472b6" sublabel="Phy" />
+                <NumInput label="Chemistry" value={chemBoard} max={100} onChange={setChemBoard} icon={FlaskConical} color="#fb923c" sublabel="Chem" />
+                <NumInput label="Maths" value={mathBoard} max={100} onChange={setMathBoard} icon={Calculator} color="#facc15" sublabel="Math" />
               </div>
             </div>
+
+            {/* KCET Marks */}
+            <div className="bg-card border border-card-border rounded-2xl p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-sm font-extrabold text-foreground">{examMode} Marks</div>
+                  <div className="text-xs text-muted-foreground">Max 60 per subject</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-black gradient-text tabular-nums">{kcetTotal}</div>
+                  <div className="text-xs text-muted-foreground">/ 180 total</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <NumInput label="Physics" value={phyKcet} max={60} onChange={setPhyKcet} icon={Atom} color="#60a5fa" sublabel="Phy" />
+                <NumInput label="Chemistry" value={chemKcet} max={60} onChange={setChemKcet} icon={FlaskConical} color="#34d399" sublabel="Chem" />
+                <NumInput label="Maths" value={mathKcet} max={60} onChange={setMathKcet} icon={Calculator} color="#a78bfa" sublabel="Math" />
+              </div>
+              <div className="mt-4 h-3 rounded-full overflow-hidden flex gap-0.5">
+                <div className="h-full rounded-l-full transition-all duration-300" style={{ width: `${((Number(phyKcet) || 0) / 180) * 100}%`, background: "#60a5fa" }} />
+                <div className="h-full transition-all duration-300" style={{ width: `${((Number(chemKcet) || 0) / 180) * 100}%`, background: "#34d399" }} />
+                <div className="h-full transition-all duration-300" style={{ width: `${((Number(mathKcet) || 0) / 180) * 100}%`, background: "#a78bfa" }} />
+                <div className="flex-1 h-full bg-muted rounded-r-full" />
+              </div>
+              <div className="flex gap-4 mt-1.5">
+                {[["Physics", "#60a5fa", phyKcet], ["Chemistry", "#34d399", chemKcet], ["Maths", "#a78bfa", mathKcet]].map(([l, c, v]) => (
+                  <div key={l as string} className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full" style={{ background: c as string }} />
+                    <span className="text-[10px] text-muted-foreground">{l}: <strong style={{ color: c as string }}>{v}</strong></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
           {/* Subject Mode only */}
 
           {/* Predict button at the bottom of the left column */}
@@ -503,7 +560,7 @@ export default function RankPredictor() {
 
         {/* ── RIGHT SIDE (Predicted Rank - Sticky Sidebar) ── */}
         <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-5 animate-slide-up delay-100">
-          
+
           {!calculated ? (
             /* Beautiful Premium Placeholder Card */
             <div className="relative overflow-hidden bg-card border border-border rounded-2xl p-8 space-y-6 shadow-lg text-center flex flex-col items-center justify-center min-h-[350px]">
@@ -517,7 +574,7 @@ export default function RankPredictor() {
                   Enter your subject-wise or overall KCET and Board scores on the left, then click <strong>Predict My Rank</strong> to reveal your detailed forecast!
                 </p>
               </div>
-              <button 
+              <button
                 onClick={handlePredictClick}
                 className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-gradient-to-r from-primary to-violet-600 text-white rounded-xl text-xs font-extrabold hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg shadow-primary/30"
               >
@@ -571,6 +628,13 @@ export default function RankPredictor() {
               Rank prediction is an estimate based on historical {examMode} trends. Always verify details with the official KEA counseling portal.
             </p>
           </div>
+
+          {/* AdSense — rectangle ad below disclaimer */}
+          <AdBanner
+            slot="9020022771"
+            format="rectangle"
+            className="mt-2"
+          />
 
         </div>
 

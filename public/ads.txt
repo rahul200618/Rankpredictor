@@ -1,5 +1,6 @@
-# This file is currently empty.
-# Once you sign up for Google AdSense and get approved, 
-# Google will give you a line of code to paste here.
-# It will look something like this:
-# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+google.com, pub-5664325162210470, DIRECT, f08c47fec0942fa0
+
+# Notes:
+# - This file tells ad networks which accounts are authorized to sell your inventory.
+# - Keep only one ads.txt at your site's root (this file).
+# - After deploying, verify at https://ads.txt.org/checker or in your AdSense console.
