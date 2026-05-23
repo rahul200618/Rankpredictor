@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useExamMode } from "@/contexts/ExamModeContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +6,7 @@ import {
   Target, BookOpen, ArrowRight, Zap, TrendingUp, Shield, 
   Sparkles, GraduationCap, Trophy, Clock, ChevronRight, 
   Users, Award, HelpCircle, CheckCircle2, Heart, ExternalLink,
-  Phone, Mail, MapPin, Send, Loader2, Check, AlertCircle
+  Phone, Mail, MapPin, Send, Loader2, Check, AlertCircle, X
 } from "lucide-react";
 
 const tips = [
@@ -19,12 +19,12 @@ const tips = [
 
 const faqsKcet = [
   {
-    q: "How accurate is the KCET Rank Predictor?",
-    a: "Our algorithm uses the official KEA scoring model combined with actual KCET and Board averages. Since 2026 cutoffs depend on paper difficulty and student averages, we provide a calibrated High/Moderate/Borderline confidence range to give you the most realistic estimate.",
+    q: "How accurate is the CET Rank Predictor?",
+    a: "Our algorithm uses the official KEA scoring model combined with actual CET and Board averages. Since 2026 cutoffs depend on paper difficulty and student averages, we provide a calibrated High/Moderate/Borderline confidence range to give you the most realistic estimate.",
   },
   {
     q: "What is the KEA score calculation formula?",
-    a: "For Engineering streams, the KEA score is derived by taking 50% of your KCET exam score (scaled out of 100) plus 50% of your PUC/12th standard Physics, Chemistry, and Mathematics (PCM) board average.",
+    a: "For Engineering streams, the KEA score is derived by taking 50% of your CET exam score (scaled out of 100) plus 50% of your PUC/12th standard Physics, Chemistry, and Mathematics (PCM) board average.",
   },
   {
     q: "Is this platform really 100% free?",
@@ -32,7 +32,7 @@ const faqsKcet = [
   },
   {
     q: "How does the College Predictor work?",
-    a: "The College Predictor maps your KEA rank directly against 3 consecutive years of round-by-round KCET counseling data. It categorizes eligible choices into clear probability brackets so you can plan your option entry intelligently.",
+    a: "The College Predictor maps your KEA rank directly against 3 consecutive years of round-by-round CET counseling data. It categorizes eligible choices into clear probability brackets so you can plan your option entry intelligently.",
   },
 ];
 
@@ -63,7 +63,7 @@ const STREAMS = [
 ];
 
 const EXAMS = [
-  { id: "kcet", label: "KCET" },
+  { id: "kcet", label: "CET" },
   { id: "comedk", label: "COMEDK" },
 ];
 
@@ -74,6 +74,8 @@ export default function Home() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [availableExamModes, setAvailableExamModes] = useState<Array<"KCET" | "COMEDK">>([]);
+  const [, setLocation] = useLocation();
+  const [showPredictorModal, setShowPredictorModal] = useState(false);
 
   // Counseling Enquiry Form State
   const [enquiryName, setEnquiryName] = useState("");
@@ -251,7 +253,7 @@ export default function Home() {
             {/* Headline */}
             <h1 className="animate-slide-up text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
               <span className="gradient-text">Crack</span>{" "}
-              <span className="text-foreground">{displayExamMode}</span><br />
+              <span className="text-foreground">{displayExamMode === "KCET" ? "CET" : displayExamMode}</span><br />
               <span className="text-foreground">counseling with</span>{" "}
               <span className="gradient-text">absolute confidence</span>
             </h1>
@@ -263,12 +265,12 @@ export default function Home() {
 
             {/* Action CTAs */}
             <div className="animate-slide-up delay-150 flex flex-wrap justify-center items-center gap-4">
-              <Link
-                href="/rank-predictor"
+              <button
+                onClick={() => setShowPredictorModal(true)}
                 className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl text-base md:text-lg font-black hover:bg-blue-700 transition-all hover:scale-105 shadow-lg shadow-blue-600/30"
               >
                 <Zap size={18} /> Predict My Rank <ArrowRight size={18} />
-              </Link>
+              </button>
             </div>
         </div>
       </section>
@@ -287,7 +289,7 @@ export default function Home() {
               icon: Target,
               label: "Rank Predictor",
               desc: displayExamMode === "KCET" 
-                ? "Input your actual or expected KCET marks & PUC board average. See KEA Score calculations and predicted rank ranges instantly."
+                ? "Input your actual or expected CET marks & PUC board average. See KEA Score calculations and predicted rank ranges instantly."
                 : "Input your actual or expected COMEDK marks. Get accurate rank predictions and confidence brackets for your specific branch.",
               gradient: "from-blue-500 to-indigo-600",
               glow: "rgba(99,102,241,0.25)",
@@ -310,17 +312,25 @@ export default function Home() {
               tag: "Cutoff Analysis",
               tagBg: "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300",
             },
-          ].map(({ href, icon: Icon, label, desc, gradient, glow, bg, iconColor, tag, tagBg }, i) => (
-            <Link
-              key={href}
-              href={href}
-              className="group relative bg-card border border-card-border rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1.5 overflow-hidden shadow-sm"
-              style={{
-                ...(hoveredIdx === i ? { boxShadow: `0 12px 32px -8px ${glow}`, borderColor: iconColor + "50" } : {}),
-              }}
-              onMouseEnter={() => setHoveredIdx(i)}
-              onMouseLeave={() => setHoveredIdx(null)}
-            >
+          ].map(({ href, icon: Icon, label, desc, gradient, glow, bg, iconColor, tag, tagBg }, i) => {
+            const isRankPredictor = href === "/rank-predictor";
+            return (
+              <div
+                key={href}
+                onClick={() => {
+                  if (isRankPredictor) {
+                    setShowPredictorModal(true);
+                  } else {
+                    setLocation(href);
+                  }
+                }}
+                className="group relative bg-card border border-card-border rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1.5 overflow-hidden shadow-sm cursor-pointer"
+                style={{
+                  ...(hoveredIdx === i ? { boxShadow: `0 12px 32px -8px ${glow}`, borderColor: iconColor + "50" } : {}),
+                }}
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}
+              >
               {/* Radial gradient background hover effect */}
               <div
                 className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
@@ -351,8 +361,9 @@ export default function Home() {
                   Open Dashboard <ChevronRight size={13} className="transition-transform group-hover:translate-x-1" />
                 </span>
               </div>
-            </Link>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -671,7 +682,7 @@ export default function Home() {
         <div className="text-center space-y-2">
           <HelpCircle size={24} className="text-primary mx-auto" />
           <h2 className="text-2xl font-extrabold text-foreground">Frequently Asked Questions</h2>
-          <p className="text-xs text-muted-foreground">Clear answers to common questions about {displayExamMode} counseling and predictions.</p>
+          <p className="text-xs text-muted-foreground">Clear answers to common questions about {displayExamMode === "KCET" ? "CET" : displayExamMode} counseling and predictions.</p>
         </div>
 
           {(displayExamMode === "KCET" ? faqsKcet : faqsComedk).map(({ q, a }, i) => {
@@ -702,6 +713,91 @@ export default function Home() {
             );
           })}
       </section>
+
+      {/* ── Predictor Choice Modal ── */}
+      {showPredictorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-scale-in">
+          {/* Backdrop click close */}
+          <div className="absolute inset-0" onClick={() => setShowPredictorModal(false)} />
+          
+          <div className="relative bg-card border border-card-border rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl overflow-hidden z-10">
+            {/* Background glowing decorations */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-blue-500/10 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-violet-500/10 blur-2xl pointer-events-none" />
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowPredictorModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              aria-label="Close modal"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="text-center space-y-2 mb-6">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-black tracking-widest uppercase">
+                <Sparkles size={10} /> Prediction Suite
+              </span>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-foreground">Choose Exam Predictor</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Select the exam you'd like to analyze. Our calibrated algorithms will predict your ranks and target colleges.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* CET Button Option */}
+              <button
+                onClick={() => {
+                  setExamMode("KCET");
+                  setLocation("/rank-predictor");
+                  setShowPredictorModal(false);
+                }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-blue-500/20 hover:border-blue-500/60 bg-blue-500/5 hover:bg-blue-500/10 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/10 group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/30 shrink-0 transition-transform group-hover:scale-110">
+                  <GraduationCap size={24} />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-foreground text-sm flex items-center gap-1.5">
+                    CET Predictor
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                      KEA
+                    </span>
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-normal">
+                    Predict ranks based on CET scores and PUC board averages.
+                  </p>
+                </div>
+              </button>
+
+              {/* COMEDK Button Option */}
+              <button
+                onClick={() => {
+                  setExamMode("COMEDK");
+                  setLocation("/rank-predictor");
+                  setShowPredictorModal(false);
+                }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-violet-500/20 hover:border-violet-500/60 bg-violet-500/5 hover:bg-violet-500/10 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-500/10 group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-600/30 shrink-0 transition-transform group-hover:scale-110">
+                  <Target size={22} />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-foreground text-sm flex items-center gap-1.5">
+                    COMEDK Predictor
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-violet-500/20 text-violet-600 dark:text-violet-400">
+                      UGET
+                    </span>
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-normal">
+                    Analyze target cutoff scores for premium private institutions.
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

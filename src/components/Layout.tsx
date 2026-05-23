@@ -341,8 +341,8 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
           }`}
       >
         {/* Brand */}
-        <Link href="/" className="flex items-center justify-start -ml-4 sm:-ml-5 group shrink-0">
-          <div className="relative h-10 w-[175px] sm:w-[220px] md:w-[280px] overflow-visible shrink-0 transition-all duration-300 group-hover:drop-shadow-[0_0_20px_rgba(96,165,250,0.34)]">
+        <Link href="/" className="flex items-center justify-start -ml-8 sm:-ml-5 group shrink-0">
+          <div className="relative h-10 w-[150px] sm:w-[220px] md:w-[280px] overflow-visible shrink-0 transition-all duration-300 group-hover:drop-shadow-[0_0_20px_rgba(96,165,250,0.34)]">
             <img
               src={logoSrc}
               alt="RankPrediction Logo"
@@ -353,8 +353,6 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
             />
           </div>
         </Link>
-
-        <div className="flex-1 md:hidden" />
 
         {/* Center Desktop Navigation Pill */}
         <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-2 p-1.5 rounded-[22px] border border-white/20 bg-white/8 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
@@ -391,7 +389,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
                   : "text-white/70 hover:text-white"
                 }`}
             >
-              KCET
+              CET
               {examMode === "KCET" && (
                 <span className="absolute -top-0.5 -right-0.5 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-emerald-400 rounded-full border border-background" />
               )}
@@ -423,7 +421,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
         </button>
 
         {/* User avatar / auth actions */}
-        <div className="hidden sm:block">
+        <div className="hidden md:block">
           <UserMenu />
         </div>
 
@@ -431,7 +429,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
         <button
           data-testid="mobile-menu-toggle"
           onClick={() => setMobileMenuOpen(true)}
-          className="sm:hidden p-2 rounded-xl border border-white/20 hover:bg-white/10 text-white/80 hover:text-white shadow-inner"
+          className="md:hidden p-2 rounded-xl border border-white/20 hover:bg-white/10 text-white/80 hover:text-white shadow-inner"
         >
           <Menu size={16} />
         </button>
@@ -451,7 +449,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
         />
 
         {/* Global Production Footer */}
-        <footer className="mt-8 border-t border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-50 backdrop-blur-lg pb-16 sm:pb-0">
+        <footer className="mt-8 border-t border-slate-700/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-50 backdrop-blur-lg pb-20 md:pb-0">
           <div className="max-w-5xl mx-auto px-6 py-6">
 
 
@@ -496,7 +494,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
                   </li>
                   <li>
                     <Link href="/rank-predictor" className="hover:text-white transition-colors">
-                      KCET Rank Predictor
+                      CET Rank Predictor
                     </Link>
                   </li>
                   <li>
@@ -565,11 +563,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
 
       {/* ── Mobile bottom nav ── */}
       <div
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center gap-6 px-4 py-3 border-t border-border/30"
-        style={{
-          background: "transparent",
-          backdropFilter: "blur(20px)",
-        }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-center gap-6 px-4 py-3 border-t border-border/50 bg-card/90 backdrop-blur-xl shadow-lg"
       >
         {activeNavItems.map(({ path, label, icon: Icon, color, badge }) => {
           const isActive = location === path;
@@ -601,7 +595,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
 
       {/* ── Mobile full-screen menu ── */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 sm:hidden" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
+        <div className="fixed inset-0 z-50 md:hidden" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
           <div
             className="absolute bottom-0 left-0 right-0 rounded-t-3xl p-6 pb-10"
             style={{
@@ -644,7 +638,7 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
                       className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${examMode === "KCET" ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
                         }`}
                     >
-                      KCET
+                      CET
                     </button>
                     <button
                       onClick={() => setExamMode("COMEDK")}
