@@ -148,57 +148,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Production: real Firebase phone auth
-    const triggerSignIn = async (forceFresh = false) => {
+    const triggerSignIn = async () => {
       let verifier = (window as any)._recaptchaVerifier;
 
-      if (forceFresh && verifier) {
+      if (verifier) {
         try { verifier.clear(); } catch (e) {}
-        verifier = null;
         (window as any)._recaptchaVerifier = null;
       }
 
-      if (verifier) {
-        const container = document.getElementById("recaptcha-container");
-        if (!container || !container.hasChildNodes()) {
-          try { verifier.clear(); } catch (e) {}
-          verifier = null;
-          (window as any)._recaptchaVerifier = null;
-        }
+      // Remove any existing dynamic recaptcha container
+      const oldContainer = document.getElementById("dynamic-recaptcha-container");
+      if (oldContainer) {
+        try { oldContainer.remove(); } catch (e) {}
       }
 
-      if (!verifier) {
-        verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "invisible",
-          callback: () => {},
-        });
-        (window as any)._recaptchaVerifier = verifier;
-      }
+      // Create a fresh dynamic recaptcha container and append to body
+      const container = document.createElement("div");
+      container.id = "dynamic-recaptcha-container";
+      document.body.appendChild(container);
+
+      verifier = new RecaptchaVerifier(auth, container, {
+        size: "invisible",
+        callback: () => {},
+      });
+      (window as any)._recaptchaVerifier = verifier;
 
       return signInWithPhoneNumber(auth, phone, verifier);
     };
 
     try {
-      confirmationResultRef = await triggerSignIn(false);
+      confirmationResultRef = await triggerSignIn();
     } catch (err: any) {
       console.warn("First sign-in attempt failed. Retrying with fresh recaptcha...", err);
-      const message = String(err?.message ?? "").toLowerCase();
-      const code = String(err?.code ?? "").toLowerCase();
-      const isRecaptchaErr =
-        message.includes("rendered") ||
-        message.includes("removed") ||
-        message.includes("already-exists") ||
-        code.includes("recaptcha");
-
-      if (isRecaptchaErr) {
-        try {
-          confirmationResultRef = await triggerSignIn(true);
-          return;
-        } catch (retryErr: any) {
-          err = retryErr;
-        }
+      try {
+        confirmationResultRef = await triggerSignIn();
+      } catch (retryErr: any) {
+        throw retryErr;
       }
-
-      throw err;
     }
   };
 
@@ -272,8 +258,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isDevMode: IS_LOCALHOST,
       sendOtp, verifyOtp, updateDisplayName, signOut,
     }}>
-      {/* Invisible reCAPTCHA anchor (only needed in production) */}
-      <div id="recaptcha-container" />
       {children}
     </AuthContext.Provider>
   );

@@ -104,52 +104,26 @@ export default function AuthPage() {
     }
   };
 
-  // ── Action: Save Profile & Complete Signup ───────────────────────────────
-  const handleCompleteSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) { setError("Please enter your full name"); return; }
-    if (interestedSubjects.length === 0) {
-      setError("Please select at least one stream you're interested in");
-      return;
-    }
+  const isVerifyingRef = useRef(false);
+  const isVerifiedRef = useRef(false);
 
-    const code = otp.join("");
-    if (code.length !== 6) { setError("Enter the 6-digit OTP code"); return; }
-
+  // ── Helper: Save Profile and Navigate ─────────────────────────────────────
+  const completeSignupFlow = async (nameVal: string, subjectsVal: string[], verifiedUser?: any) => {
     setError("");
     setLoading(true);
     try {
-      // 1. Verify OTP first if not already verified
-      if (!otpVerified) {
-        try {
-          await verifyOtp(code);
-          setOtpVerified(true);
-        } catch (verifyErr: any) {
-          setError(
-            isDevMode
-              ? `Dev mode: use code 123456`
-              : (verifyErr?.message ?? "Invalid verification code. Please check and try again.")
-          );
-          setLoading(false);
-          return;
-        }
-      }
+      await updateDisplayName(nameVal);
 
-      // 2. Save display name in Firebase profile
-      await updateDisplayName(name.trim());
-
-      const uid = (user && "uid" in user ? (user as any).uid : undefined) ?? `dev-+91${phone}`;
+      const activeUser = verifiedUser || user;
+      const uid = (activeUser && "uid" in activeUser ? activeUser.uid : undefined) ?? `dev-+91${phone}`;
 
       try {
-        // Fire and forget to avoid blocking login flow
-        supabase.from("user_profiles").upsert({
+        await supabase.from("user_profiles").upsert({
           id: uid,
           phone: `+91${phone}`,
-          full_name: name.trim(),
-          interested_subjects: interestedSubjects,
+          full_name: nameVal,
+          interested_subjects: subjectsVal,
           interested_exams: [],
-        }).then(({ error }) => {
-          if (error) console.warn("Failed to write to Supabase: ", error);
         });
       } catch (dbErr) {
         console.warn("Error starting Supabase write: ", dbErr);
@@ -157,7 +131,7 @@ export default function AuthPage() {
 
       toast({
         title: "🎉 Registration Complete",
-        description: `Welcome to RankPrediction, ${name.trim()}!`,
+        description: `Welcome to RankPrediction, ${nameVal}!`,
       });
       navigate("/rank-predictor");
     } catch (err: any) {
@@ -167,15 +141,60 @@ export default function AuthPage() {
     }
   };
 
+  // ── Action: Save Profile & Complete Signup ───────────────────────────────
+  const handleCompleteSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isVerifyingRef.current) return;
+    if (!name.trim()) { setError("Please enter your full name"); return; }
+    if (interestedSubjects.length === 0) {
+      setError("Please select at least one stream you're interested in");
+      return;
+    }
+
+    const code = otp.join("");
+    if (code.length !== 6) { setError("Enter the 6-digit OTP code"); return; }
+
+    let verifiedUser = null;
+    if (!isVerifiedRef.current && !isVerifyingRef.current) {
+      isVerifyingRef.current = true;
+      setVerifyingOtp(true);
+      setError("");
+      try {
+        verifiedUser = await verifyOtp(code);
+        isVerifiedRef.current = true;
+        setOtpVerified(true);
+      } catch (verifyErr: any) {
+        setError(
+          isDevMode
+            ? `Dev mode: use code 123456`
+            : (verifyErr?.message ?? "Invalid verification code. Please check and try again.")
+        );
+        return;
+      } finally {
+        isVerifyingRef.current = false;
+        setVerifyingOtp(false);
+      }
+    }
+
+    await completeSignupFlow(name.trim(), interestedSubjects, verifiedUser);
+  };
+
   // ── Auto-verify when all 6 digits are entered ───────────────────────────
   const autoVerifyOtp = async (otpArr: string[]) => {
     const code = otpArr.join("");
-    if (code.length !== 6 || otpVerified || verifyingOtp) return;
+    if (code.length !== 6 || isVerifiedRef.current || isVerifyingRef.current) return;
+    isVerifyingRef.current = true;
     setVerifyingOtp(true);
     setError("");
     try {
-      await verifyOtp(code);
+      const verifiedUser = await verifyOtp(code);
+      isVerifiedRef.current = true;
       setOtpVerified(true);
+
+      // Auto-submit and navigate if details are already filled
+      if (name.trim() && interestedSubjects.length > 0) {
+        await completeSignupFlow(name.trim(), interestedSubjects, verifiedUser);
+      }
     } catch (err: any) {
       setError(
         isDevMode
@@ -186,6 +205,7 @@ export default function AuthPage() {
       setOtp(["", "", "", "", "", ""]);
       setTimeout(() => document.getElementById("otp-0")?.focus(), 50);
     } finally {
+      isVerifyingRef.current = false;
       setVerifyingOtp(false);
     }
   };
@@ -422,10 +442,10 @@ export default function AuthPage() {
             {/* Complete Signup Button */}
             <button
               type="submit"
-              disabled={loading || otp.join("").length !== 6 || !name.trim() || interestedSubjects.length === 0}
+              disabled={loading || verifyingOtp || otp.join("").length !== 6 || !name.trim() || interestedSubjects.length === 0}
               className="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white rounded-xl font-black text-sm shadow-xl shadow-indigo-500/25 hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.01] active:scale-[0.99] mt-6"
             >
-              {loading ? (
+              {loading || verifyingOtp ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
                 <>
