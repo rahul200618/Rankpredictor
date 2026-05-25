@@ -38,7 +38,6 @@ interface AuthContextType {
 
 // ─── Developer phone list (from environment variable) ─────────────────────────
 // Set VITE_DEVELOPER_PHONES in your .env.local as a comma-separated list
-// e.g. VITE_DEVELOPER_PHONES=+916360749270,+917026802690
 const DEVELOPER_PHONES = (import.meta.env.VITE_DEVELOPER_PHONES ?? "")
   .split(",")
   .map((p: string) => p.trim())
@@ -50,10 +49,10 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isDeveloper: false,
   isDevMode: false,
-  sendOtp: async () => {},
+  sendOtp: async () => { },
   verifyOtp: async () => { throw new Error("Not ready"); },
-  updateDisplayName: async () => {},
-  signOut: async () => {},
+  updateDisplayName: async () => { },
+  signOut: async () => { },
 });
 
 let confirmationResultRef: ConfirmationResult | null = null;
@@ -80,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               parsed = parsed.split(",").map((p: string) => p.trim());
             }
             if (Array.isArray(parsed)) setDynamicAdminPhones(parsed);
-          } catch(e) {}
+          } catch (e) { }
         }
       } catch (e) {
         console.error("Error fetching admin phones", e);
@@ -105,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               parsed = parsed.split(",").map((p: string) => p.trim());
             }
             if (Array.isArray(parsed)) setDynamicAdminPhones(parsed);
-          } catch(e) {}
+          } catch (e) { }
         }
       )
       .subscribe();
@@ -152,14 +151,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let verifier = (window as any)._recaptchaVerifier;
 
       if (verifier) {
-        try { verifier.clear(); } catch (e) {}
+        try { verifier.clear(); } catch (e) { }
         (window as any)._recaptchaVerifier = null;
       }
 
       // Remove any existing dynamic recaptcha container
       const oldContainer = document.getElementById("dynamic-recaptcha-container");
       if (oldContainer) {
-        try { oldContainer.remove(); } catch (e) {}
+        try { oldContainer.remove(); } catch (e) { }
       }
 
       // Create a fresh dynamic recaptcha container and append to body
@@ -169,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       verifier = new RecaptchaVerifier(auth, container, {
         size: "invisible",
-        callback: () => {},
+        callback: () => { },
       });
       (window as any)._recaptchaVerifier = verifier;
 
