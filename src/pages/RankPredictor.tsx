@@ -291,13 +291,13 @@ export default function RankPredictor() {
   };
 
   const handlePredictClick = () => {
-    const hasKcet = subjectMode ? (phyKcet !== "" || chemKcet !== "" || mathKcet !== "") : simpleKcet !== "";
-    const hasBoard = subjectMode ? (phyBoard !== "" || chemBoard !== "" || mathBoard !== "") : simplePuc !== "";
+    const isKcetIncomplete = phyKcet === "" || chemKcet === "" || mathKcet === "";
+    const isBoardIncomplete = phyBoard === "" || chemBoard === "" || mathBoard === "";
 
-    if (!hasKcet && !hasBoard) {
+    if (isKcetIncomplete || isBoardIncomplete) {
       toast({
-        title: "No Marks Entered",
-        description: "Please enter your KCET or Board marks first to calculate!",
+        title: "Marks Required",
+        description: "Please enter all CET and Board marks fields before predicting your rank!",
         variant: "destructive"
       });
       return;
@@ -308,19 +308,17 @@ export default function RankPredictor() {
 
     // Auto-save rank result to Supabase (non-blocking)
     const pred = predictRank(
-      subjectMode
-        ? (Number(phyKcet) || 0) + (Number(chemKcet) || 0) + (Number(mathKcet) || 0)
-        : Number(simpleKcet) || 0,
-      subjectMode
-        ? ((Number(phyBoard) || 0) + (Number(chemBoard) || 0) + (Number(mathBoard) || 0)) / 3
-        : Number(simplePuc) || 0
+      (Number(phyKcet) || 0) + (Number(chemKcet) || 0) + (Number(mathKcet) || 0),
+      ((Number(phyBoard) || 0) + (Number(chemBoard) || 0) + (Number(mathBoard) || 0)) / 3
     );
     saveRankResult(pred.low, pred.high, pred.composite);
 
-    // Smooth scroll to the result card on mobile
-    if (window.innerWidth < 1024 && cardRef.current) {
-      cardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    // Smooth scroll to the result card on mobile (use setTimeout to wait for element to mount)
+    setTimeout(() => {
+      if (window.innerWidth < 1024 && cardRef.current) {
+        cardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
   };
 
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");

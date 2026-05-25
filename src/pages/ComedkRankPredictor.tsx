@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useExamMode } from "@/contexts/ExamModeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -174,6 +174,7 @@ export default function ComedkRankPredictor() {
   const { examMode } = useExamMode();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Fetch user's interested subjects for enriching rank saves
   const [interestedSubjects, setInterestedSubjects] = useState<string[]>([]);
@@ -262,14 +263,14 @@ export default function ComedkRankPredictor() {
   };
 
   const handlePredictClick = () => {
-    const hasMarks = subjectMode 
-      ? (phyComedk !== "" || chemComedk !== "" || mathComedk !== "") 
-      : simpleComedk !== "";
+    const isMarksIncomplete = subjectMode 
+      ? (phyComedk === "" || chemComedk === "" || mathComedk === "") 
+      : simpleComedk === "";
 
-    if (!hasMarks) {
+    if (isMarksIncomplete) {
       toast({
-        title: "No Marks Entered",
-        description: "Please enter your COMEDK marks first to calculate!",
+        title: "Marks Required",
+        description: "Please fill in all COMEDK marks fields before predicting your rank!",
         variant: "destructive"
       });
       return;
@@ -281,10 +282,12 @@ export default function ComedkRankPredictor() {
     // Auto-save rank result to Supabase student_rank_results table (non-blocking)
     saveRankResult(rankLow, rankHigh, keaScore);
 
-    // Smooth scroll to the result card on mobile
-    if (window.innerWidth < 1024) {
-      document.getElementById('comedk-result-card')?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    // Smooth scroll to the result card on mobile (use setTimeout to wait for element to mount)
+    setTimeout(() => {
+      if (window.innerWidth < 1024 && cardRef.current) {
+        cardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
   };
 
   return (
@@ -461,7 +464,7 @@ export default function ComedkRankPredictor() {
           ) : (
             /* Prediction Result Card */
             <>
-              <div id="comedk-result-card" className="relative overflow-hidden bg-card border-2 border-amber-500/25 rounded-2xl p-6 space-y-5 shadow-lg shadow-amber-500/10">
+              <div id="comedk-result-card" ref={cardRef} className="relative overflow-hidden bg-card border-2 border-amber-500/25 rounded-2xl p-6 space-y-5 shadow-lg shadow-amber-500/10">
                 <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-amber-500/8 blur-2xl pointer-events-none" />
                 <div className="flex items-center justify-between gap-4">
                   <div>
