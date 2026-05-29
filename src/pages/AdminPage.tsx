@@ -62,19 +62,44 @@ export default function AdminPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [enqRes, usersRes, rankRes] = await Promise.all([
-          supabase.from("counseling_enquiries").select("*").order("created_at", { ascending: false }),
-          supabase.from("user_profiles").select("*"),
-          supabase.from("student_rank_results").select("*").order("created_at", { ascending: false }),
+        const fetchTableData = async (tableName: string, fallbackEmpty: boolean = false) => {
+          let allData: any[] = [];
+          let page = 0;
+          const pageSize = 1000;
+          while (true) {
+            const start = page * pageSize;
+            const end = start + pageSize - 1;
+            const { data, error } = await supabase
+              .from(tableName)
+              .select("*")
+              .order("created_at", { ascending: false })
+              .range(start, end);
+            
+            if (error) {
+              if (fallbackEmpty) {
+                console.warn(`Failed to fetch ${tableName}, falling back to empty list:`, error.message);
+                return [];
+              }
+              throw error;
+            }
+            if (!data || data.length === 0) break;
+            
+            allData = allData.concat(data);
+            if (data.length < pageSize) break;
+            page++;
+          }
+          return allData;
+        };
+
+        const [enqData, usersData, rankData] = await Promise.all([
+          fetchTableData("counseling_enquiries"),
+          fetchTableData("user_profiles"),
+          fetchTableData("student_rank_results", true),
         ]);
 
-        if (enqRes.error) throw enqRes.error;
-        if (usersRes.error) throw usersRes.error;
-        // rank results table may not exist yet — fail silently
-        if (!rankRes.error) setRankResults(rankRes.data || []);
-
-        setEnquiries(enqRes.data || []);
-        setUsers(usersRes.data || []);
+        setEnquiries(enqData || []);
+        setUsers(usersData || []);
+        setRankResults(rankData || []);
       } catch (err: any) {
         console.error("Error fetching admin data", err);
         toast({ title: "Error", description: "Failed to load admin data.", variant: "destructive" });
