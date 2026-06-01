@@ -462,16 +462,21 @@ export default function Layout({ children, theme, toggleTheme }: LayoutProps) {
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 hover:opacity-90 transition-all w-fit"
                 >
-                  <div className="relative w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white font-extrabold text-lg shadow-md shrink-0 overflow-hidden">
+                  <div className="relative w-12 h-12 rounded-xl bg-white border border-white/20 flex items-center justify-center shadow-md shrink-0 overflow-hidden">
                     <img
                       src="/vidyarthi-sewa-logo.png"
-                      alt="VS"
-                      className="w-full h-full object-cover absolute inset-0"
+                      alt="Vidhyarthi Sewa Trust"
+                      className="w-full h-full object-contain p-1 rounded-xl"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = "none";
+                        const parent = (e.target as HTMLElement).parentElement;
+                        if (parent) {
+                          const fallback = parent.querySelector('.footer-logo-fallback') as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }
                       }}
                     />
-                    <span className="text-sm font-black relative z-10">VS</span>
+                    <span className="footer-logo-fallback text-sm font-black text-blue-600 hidden">VS</span>
                   </div>
                   <div className="flex flex-col items-start text-left">
                     <span className="text-xs font-black text-white tracking-tight leading-none">Vidhyarthi Sewa Trust</span>

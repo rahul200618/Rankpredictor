@@ -420,16 +420,21 @@ export default function Home() {
             </div>
 
             <div className="md:col-span-4 flex justify-center items-center">
-              <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-5xl font-black shadow-lg shadow-blue-500/20 relative">
+              <div className="w-36 h-36 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-blue-500/20 relative overflow-hidden border border-gray-100">
                 <img 
                   src="/vidyarthi-sewa-logo.png" 
-                  alt="VS Logo" 
-                  className="absolute inset-0 w-full h-full object-cover rounded-2xl"
+                  alt="Vidhyarthi Sewa Trust Logo" 
+                  className="w-full h-full object-contain p-3 rounded-2xl"
                   onError={(e) => {
                     (e.target as HTMLElement).style.display = "none";
+                    const parent = (e.target as HTMLElement).parentElement;
+                    if (parent) {
+                      const fallback = parent.querySelector('.logo-initials') as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }
                   }}
                 />
-                <span className="logo-initials text-4xl font-extrabold relative z-10 tracking-wider">VS</span>
+                <span className="logo-initials text-4xl font-extrabold tracking-wider text-blue-600 hidden">VS</span>
               </div>
             </div>
           </div>
